@@ -10,11 +10,8 @@ The fastest way to get started:
 # Install Weave
 curl -fsSL https://weave.dev/install.sh | bash
 
-# Run setup wizard
-weave setup
-
 # Verify installation
-weave doctor
+weave --version
 ```
 
 ---
@@ -36,10 +33,10 @@ curl -fsSL https://weave.dev/install.sh | bash
 - ✓ Offers to install optional features (LLM, deployment, dev tools)
 - ✓ Verifies installation
 
-After installation, run:
+After installation, verify:
 
 ```bash
-weave setup
+weave --version
 ```
 
 ### Method 2: Manual Installation
@@ -56,9 +53,6 @@ pip install -e .
 
 # 3. Verify
 weave --version
-
-# 4. Run setup wizard
-weave setup
 ```
 
 ### Method 3: pip Install (Coming Soon)
@@ -251,7 +245,10 @@ Create a simple workflow and test it:
 # Create example
 weave init
 
-# Test in mock mode (no API calls)
+# Set up API keys before running
+export OPENAI_API_KEY="sk-..."
+
+# Run the pipeline
 weave apply
 
 # View help
@@ -459,11 +456,10 @@ docker run -v $(pwd):/workspace -it weave-cli
 
 After installation:
 
-1. **Run setup wizard**: `weave setup`
-2. **Create example project**: `weave init`
-3. **Test with mock mode**: `weave apply`
-4. **Set up API keys** for real execution
-5. **Install shell completion** for better UX
+1. **Create example project**: `weave init`
+2. **Set up API keys**: Export `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`
+3. **Run your first pipeline**: `weave apply`
+4. **Explore commands**: `weave --help`
 6. **Read the documentation**: [docs.weave.dev](https://docs.weave.dev)
 
 ---

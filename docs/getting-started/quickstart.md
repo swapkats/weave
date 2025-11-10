@@ -176,8 +176,7 @@ weave apply --weave my_pipeline
 
 1. **Start Simple**: Begin with 2-3 agents before building complex pipelines
 2. **Use `plan` Often**: Always preview before applying
-3. **Check Dependencies**: Use `graph` to visualize agent relationships
-4. **Iterate Quickly**: Mock execution makes testing fast
+3. **Iterate Quickly**: Use `weave plan` to validate configs before execution
 
 ## Troubleshooting
 

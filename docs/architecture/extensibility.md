@@ -240,11 +240,7 @@ executor.register_hook(webhook)
 Register multiple hooks to combine different behaviors:
 
 ```python
-from weave.runtime import Executor
-from weave.runtime.hooks import LoggingHook
-
-# Create executor
-executor = Executor(config=config)
+executor = Executor()
 
 # Add multiple hooks - they'll be called in registration order
 executor.register_hook(LoggingHook("weave.log"))
@@ -366,10 +362,8 @@ def run_weave():
     graph.build("my_weave")
     graph.validate()
 
-    executor = Executor(config=config)
-
-    # Run async execution in sync context
-    summary = asyncio.run(executor.execute_flow(graph, "my_weave"))
+    executor = Executor()
+    summary = executor.execute_flow(graph, "my_weave")
 
     if summary.failed > 0:
         raise Exception(f"{summary.failed} agents failed")

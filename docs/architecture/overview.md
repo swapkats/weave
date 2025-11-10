@@ -65,8 +65,8 @@ Clear, helpful output:
                      │
 ┌────────────────────▼────────────────────────────────────┐
 │                  Runtime Layer                          │
-│                (Mock Executor)                          │
-│  • Agent execution (mocked in v0.1.0)                   │
+│                   (Executor)                            │
+│  • Agent execution with real LLM calls                  │
 │  • Output collection                                    │
 │  • Hook system                                          │
 │  • Execution tracking                                   │
@@ -215,7 +215,7 @@ order = nx.topological_sort(graph)
 ### Runtime Layer (`src/weave/runtime/`)
 
 **Responsibilities:**
-- Execute agents (mocked in v0.1.0)
+- Execute agents with real LLM calls
 - Manage execution flow
 - Collect outputs
 - Call hooks
@@ -241,7 +241,7 @@ for agent_name in order:
     # Get input from previous agent
     upstream = outputs.get(agent.inputs)
 
-    # Execute (mocked)
+    # Execute agent with real LLM call
     output = executor.execute_agent(agent, upstream)
 
     # Store output

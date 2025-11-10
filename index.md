@@ -30,11 +30,11 @@ Weave is a declarative framework for building and composing interoperable AI age
 ### 1. Install Weave
 
 ```bash
-# One-command installation with interactive setup
+# One-command installation
 curl -fsSL https://weave.dev/install.sh | bash
 
-# Then run the setup wizard
-weave setup
+# Verify installation
+weave --version
 ```
 
 ### 2. Initialize a Project
