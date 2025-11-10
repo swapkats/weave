@@ -1,0 +1,112 @@
+version: "1.0"
+
+# Customer Support Automation
+# Intelligent ticket handling and response generation
+
+env:
+  DEFAULT_MODEL: "gpt-4"
+  RESPONSE_TONE: "professional and empathetic"
+
+tools:
+  knowledge_base_search:
+    description: "Search internal knowledge base"
+    parameters:
+      type: "object"
+      properties:
+        query:
+          type: "string"
+        category:
+          type: "string"
+      required: ["query"]
+
+  ticket_lookup:
+    description: "Look up customer history"
+    parameters:
+      type: "object"
+      properties:
+        customer_id:
+          type: "string"
+      required: ["customer_id"]
+
+agents:
+  classifier:
+    model: "${DEFAULT_MODEL}"
+    description: "Classify and triage tickets"
+    tools: []
+    config:
+      temperature: 0.2
+      max_tokens: 500
+    system_prompt: |
+      Classify customer inquiry:
+      - Category: technical/billing/general/complaint
+      - Urgency: low/medium/high/critical
+      - Sentiment: positive/neutral/negative
+      - Auto-resolvable: yes/no
+      - Extract key information
+    outputs: "classification"
+
+  knowledge_agent:
+    model: "${DEFAULT_MODEL}"
+    description: "Find relevant solutions"
+    tools: [knowledge_base_search, ticket_lookup]
+    inputs: "classifier"
+    config:
+      temperature: 0.3
+      max_tokens: 1000
+    system_prompt: |
+      Search for solutions:
+      - Find matching KB articles
+      - Check similar past tickets
+      - Identify troubleshooting steps
+      - Gather relevant documentation
+    outputs: "solutions"
+
+  response_generator:
+    model: "${DEFAULT_MODEL}"
+    description: "Generate customer response"
+    tools: []
+    inputs: "knowledge_agent"
+    config:
+      temperature: 0.7
+      max_tokens: 1500
+    system_prompt: |
+      Generate helpful ${RESPONSE_TONE} response:
+      - Acknowledge customer's issue
+      - Provide clear solution steps
+      - Include relevant resources
+      - Offer next steps
+      - Match customer's tone
+    outputs: "response"
+
+  quality_checker:
+    model: "${DEFAULT_MODEL}"
+    description: "Review response quality"
+    tools: []
+    inputs: "response_generator"
+    config:
+      temperature: 0.1
+      max_tokens: 500
+    system_prompt: |
+      Evaluate response quality (1-10):
+      - Accuracy and completeness
+      - Tone and professionalism
+      - Clarity and structure
+      - Suggest improvements if < 8
+      - Flag if human review needed
+    outputs: "quality_check"
+
+weaves:
+  support_workflow:
+    description: "Complete support automation"
+    agents:
+      - classifier
+      - knowledge_agent
+      - response_generator
+      - quality_checker
+
+  quick_response:
+    description: "Fast response without quality check"
+    agents:
+      - classifier
+      - knowledge_agent
+      - response_generator

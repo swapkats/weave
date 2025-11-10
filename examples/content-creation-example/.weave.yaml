@@ -1,0 +1,96 @@
+version: "1.0"
+
+# Content Creation Pipeline
+# Create high-quality content from research to publication
+
+env:
+  DEFAULT_MODEL: "gpt-4"
+  CONTENT_TYPE: "blog-post"
+
+tools:
+  web_search:
+    description: "Search the web for information"
+    parameters:
+      type: "object"
+      properties:
+        query:
+          type: "string"
+          description: "Search query"
+      required: ["query"]
+
+  seo_analyzer:
+    description: "Analyze content for SEO"
+    parameters:
+      type: "object"
+      properties:
+        content:
+          type: "string"
+        keywords:
+          type: "array"
+          items:
+            type: "string"
+      required: ["content"]
+
+agents:
+  researcher:
+    model: "${DEFAULT_MODEL}"
+    description: "Research topics and gather information"
+    tools: [web_search]
+    config:
+      temperature: 0.7
+      max_tokens: 2000
+    system_prompt: |
+      Research the given topic thoroughly:
+      - Find recent trends and statistics
+      - Identify key insights and talking points
+      - Gather credible sources
+      - Structure findings for easy writing
+    outputs: "research"
+
+  writer:
+    model: "${DEFAULT_MODEL}"
+    description: "Write engaging content"
+    tools: []
+    inputs: "researcher"
+    config:
+      temperature: 0.8
+      max_tokens: 3000
+    system_prompt: |
+      Write compelling ${CONTENT_TYPE} based on research:
+      - Create engaging introduction with hook
+      - Structure with clear sections
+      - Include relevant examples and data
+      - Strong conclusion with call-to-action
+      - Target: 1200-1500 words
+    outputs: "draft"
+
+  editor:
+    model: "${DEFAULT_MODEL}"
+    description: "Edit and optimize content"
+    tools: [seo_analyzer]
+    inputs: "writer"
+    config:
+      temperature: 0.3
+      max_tokens: 2000
+    system_prompt: |
+      Edit and refine content:
+      - Fix grammar and style
+      - Improve readability and flow
+      - Optimize for SEO
+      - Ensure consistent tone
+      - Add meta description and title
+    outputs: "final_content"
+
+weaves:
+  create_content:
+    description: "Research, write, and edit content"
+    agents:
+      - researcher
+      - writer
+      - editor
+
+  quick_write:
+    description: "Skip research, just write and edit"
+    agents:
+      - writer
+      - editor

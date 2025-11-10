@@ -1,0 +1,137 @@
+name: refactoring
+description: Refactor code to improve quality while maintaining functionality
+instructions: |
+  Refactoring Techniques and When to Use Them:
+
+  1. Extract Method
+     - Long methods (> 20 lines)
+     - Code blocks with comments explaining what they do
+     - Complex nested conditionals
+     - Repeated code patterns
+     - Before:
+       def process():
+           # validate input
+           if not data: return
+           # transform data
+           result = data.upper()
+           # save result
+           db.save(result)
+     - After:
+       def process():
+           validate(data)
+           result = transform(data)
+           save(result)
+
+  2. Rename Variable/Method/Class
+     - Unclear or misleading names
+     - Abbreviated names (x, tmp, data)
+     - Names not revealing intent
+     - Outdated names after requirement changes
+
+  3. Extract Variable
+     - Complex expressions
+     - Long conditionals
+     - Repeated expressions
+     - Magic numbers or strings
+     - Before: if (user.age > 18 and user.country == "US")
+     - After:
+       is_adult = user.age > 18
+       is_us_citizen = user.country == "US"
+       if is_adult and is_us_citizen
+
+  4. Inline Method/Variable
+     - Method does nothing more than delegation
+     - Variable used only once
+     - Abstraction adds no value
+
+  5. Replace Conditional with Polymorphism
+     - Type checking (if isinstance...)
+     - Long switch/case statements
+     - Repeated conditional logic
+     - State-based behavior
+
+  6. Extract Class
+     - Class doing too many things
+     - Group of related methods/data
+     - High number of instance variables
+     - Low cohesion within class
+
+  7. Remove Duplication
+     - Copy-pasted code
+     - Similar logic with minor differences
+     - Repeated patterns across files
+     - Use: Extract method, create base class, or use composition
+
+  8. Simplify Conditional
+     - Complex boolean expressions
+     - Deep nesting (> 3 levels)
+     - Negative conditionals
+     - Guard clauses to reduce nesting
+
+  9. Replace Magic Numbers with Constants
+     - Hardcoded numbers/strings
+     - Unclear meaning from context
+     - Values used in multiple places
+     - Before: if count > 100
+     - After: MAX_ITEMS = 100; if count > MAX_ITEMS
+
+  10. Decompose Large Class
+      - God objects doing everything
+      - Many responsibilities
+      - High number of methods
+      - Split by responsibility/concern
+
+  Refactoring Workflow:
+
+  1. Identify Code Smell
+     - What problem exists?
+     - Why is it problematic?
+     - What's the impact?
+
+  2. Choose Refactoring Technique
+     - Which technique addresses the smell?
+     - What's the expected improvement?
+
+  3. Ensure Tests Exist
+     - Write tests if none exist
+     - Verify tests pass before refactoring
+     - Tests are your safety net
+
+  4. Make Small Changes
+     - One refactoring at a time
+     - Run tests after each change
+     - Commit working increments
+
+  5. Review and Repeat
+     - Did quality improve?
+     - Are there more smells?
+     - Stop when code is good enough
+
+  Code Smells to Watch For:
+  - Long Method (> 20 lines)
+  - Large Class (> 200 lines)
+  - Long Parameter List (> 3 params)
+  - Duplicate Code
+  - Dead Code
+  - Speculative Generality
+  - Feature Envy
+  - Inappropriate Intimacy
+  - Message Chains (a.b.c.d)
+  - Primitive Obsession
+
+examples:
+  - "Extract method from 50-line function"
+  - "Rename variables for clarity"
+  - "Remove duplicate code using helper function"
+  - "Simplify nested if-else with guard clauses"
+  - "Replace magic number 86400 with SECONDS_PER_DAY"
+
+required_tools:
+  - code_analyzer
+  - file_writer
+
+tags:
+  - refactoring
+  - code-quality
+  - clean-code
+  - maintenance

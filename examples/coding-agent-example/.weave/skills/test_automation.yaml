@@ -1,0 +1,94 @@
+name: test_automation
+description: Create comprehensive automated test suites with high coverage
+instructions: |
+  Test Automation Best Practices:
+
+  1. Test Structure (Arrange-Act-Assert)
+     - Arrange: Set up test data and preconditions
+     - Act: Execute the code being tested
+     - Assert: Verify the expected outcome
+     - Keep each section clear and focused
+
+  2. Test Naming
+     - Use descriptive names explaining what is tested
+     - Format: test_[unit]_[scenario]_[expected]
+     - Examples:
+       * test_user_login_with_valid_credentials_succeeds
+       * test_payment_processing_with_insufficient_funds_fails
+       * test_data_validation_with_empty_string_raises_error
+
+  3. Test Coverage Goals
+     - Happy path: Normal, expected usage
+     - Edge cases: Boundary values, limits
+     - Error cases: Invalid input, exceptions
+     - Integration: Component interactions
+     - Aim for 80%+ code coverage
+
+  4. Test Independence
+     - Each test should run independently
+     - No shared state between tests
+     - Use fixtures for setup/teardown
+     - Tests should pass in any order
+     - Avoid test interdependencies
+
+  5. Mocking and Stubbing
+     - Mock external dependencies (APIs, databases)
+     - Use test doubles for isolation
+     - Don't mock what you don't own (sometimes)
+     - Keep mocks simple and focused
+     - Verify mock interactions when relevant
+
+  6. Test Data Management
+     - Use factories or builders for test data
+     - Keep test data minimal and relevant
+     - Use meaningful test data (not foo/bar)
+     - Consider parameterized tests for similar cases
+     - Separate test data from test logic
+
+  7. Assertions
+     - One logical assertion per test (flexible)
+     - Use specific assertion methods
+     - Include helpful failure messages
+     - Assert on behavior, not implementation
+     - Avoid asserting on multiple unrelated things
+
+  8. Test Organization
+     - Group related tests in classes/modules
+     - Use descriptive test suite names
+     - Organize by feature or component
+     - Keep test files close to source files
+     - Use tags/markers for test categories
+
+  9. Performance
+     - Keep unit tests fast (< 100ms each)
+     - Use in-memory databases for speed
+     - Mock slow external services
+     - Separate slow integration tests
+     - Run fast tests frequently, slow tests less often
+
+  10. Test Maintenance
+      - Refactor tests like production code
+      - Remove obsolete tests
+      - Update tests when requirements change
+      - Keep tests simple and readable
+      - Avoid logic in tests
+
+examples:
+  - "Write unit tests for UserService class"
+  - "Create integration tests for API endpoints"
+  - "Add parameterized tests for data validation"
+  - "Mock database calls in repository tests"
+  - "Test error handling for network failures"
+
+required_tools:
+  - test_runner
+  - file_writer
+  - code_analyzer
+
+tags:
+  - testing
+  - automation
+  - quality-assurance
+  - tdd
+  - unit-testing
+  - integration-testing

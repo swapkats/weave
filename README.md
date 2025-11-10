@@ -1,43 +1,31 @@
 # 🧵 Weave
 
-**Declarative agent orchestration framework**
+**Create and deploy AI agents in minutes, not months**
 
-Weave allows you to define and compose AI agents using YAML configuration files and execute them with a simple, elegant CLI. Think of it as convention over config for composing AI agents.
+Weave is a declarative orchestration framework for building and composing interoperable AI agents. Define workflows in simple YAML, compose agents that work together seamlessly, and deploy to production with a single command.
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## ✨ Features
+## ✨ Why Weave?
 
-### Core Features
-- 🎯 **Declarative Configuration** - Define agents and workflows in clean YAML
-- 🔗 **Dependency Management** - Automatic dependency resolution and execution ordering
-- 📊 **Beautiful CLI** - Professional UX with rich terminal output
-- 🔍 **Validation** - Schema validation with helpful error messages
-- 🎨 **Visualization** - ASCII and Mermaid graph generation
+- ⚡ **Fast** - Go from idea to deployed agent in minutes, not months
+- 🔗 **Interoperable** - Agents work together seamlessly through declarative composition
+- 🎯 **Simple** - Clean YAML configuration, no complex code required
+- 🚀 **Production-Ready** - Deploy to AWS, GCP, or Docker with one command
+- 🔧 **Extensible** - Custom tools, plugins, and MCP integration
+- 📊 **Observable** - Track execution, prompts, outputs, and token usage
 
-### V2 Features (NEW! 🎉)
-- 🚀 **Real LLM Execution** - Actual API calls to OpenAI and Anthropic
-- 🔄 **Development Mode** - Interactive workflow development with auto-reload (`weave dev --watch`)
-- 🔎 **Run Inspection** - Detailed analysis of completed runs (`weave inspect`)
-- 💡 **Smart Error Messages** - Helpful suggestions with fuzzy matching
-- 🔧 **Plugin Execution** - Plugins run during agent execution
-- 📈 **Full Observability** - Track prompts, outputs, and token usage
+## ✨ Key Features
 
-### V3 Features (NEW! 🚀)
-- ☁️ **Cloud Deployment** - Deploy to AWS Lambda, GCP Cloud Functions, or Docker
-- 🔐 **Authentication** - Built-in credential management for cloud providers
-- 📦 **Extensible Providers** - Add your own deployment providers
-- 🌍 **Multi-Cloud** - Deploy the same workflow to multiple clouds
-- 🎯 **Production Ready** - One command deployment with endpoints
-
-### Additional Features
-- 🧪 **Mock Execution** - Test workflows without API calls (default mode)
-- 🔧 **Tool Calling** - Built-in and custom tools with JSON schema validation
-- 🌐 **MCP Integration** - Connect to Model Context Protocol servers for external tools
-- 🔌 **Plugin System** - Built-in and custom plugins for extending agent capabilities
-- 📁 **Resource Management** - Organize prompts, skills, and knowledge bases in files
-- 💾 **State Management** - Execution state tracking with run history
+- **Declarative YAML** - Define agents and workflows in clean configuration
+- **Automatic Orchestration** - Smart dependency resolution and execution ordering
+- **Multiple LLM Providers** - OpenAI, Anthropic, and more
+- **Tool Calling** - Built-in and custom tools with JSON schema validation
+- **MCP Integration** - Connect to Model Context Protocol servers
+- **Cloud Deployment** - Deploy to AWS Lambda, GCP Cloud Functions, or Docker
+- **Development Mode** - Interactive workflow development with auto-reload
+- **Resource Management** - Organize prompts, skills, and knowledge bases
 
 ## 📦 Installation
 
@@ -586,16 +574,32 @@ agents:
 
 ## 📂 Examples
 
-See the `examples/` directory for complete examples:
+The `examples/` directory contains production-ready examples for common use cases:
 
-- **[basic.weave.yaml](examples/basic.weave.yaml)** - Simple two-agent pipeline
-- **[research-pipeline.weave.yaml](examples/research-pipeline.weave.yaml)** - Multi-stage research workflow
-- **[data-processing.weave.yaml](examples/data-processing.weave.yaml)** - ETL-style data pipeline
-- **[tool-calling.weave.yaml](examples/tool-calling.weave.yaml)** - Using built-in and custom tools
-- **[mcp-integration.weave.yaml](examples/mcp-integration.weave.yaml)** - MCP server integration
-- **[custom_plugin_example.py](examples/custom_plugin_example.py)** - Creating custom plugins
-- **[resources_example/](examples/resources_example/)** - Complete resources system demo
-- **[TOOLS_AND_MCP.md](examples/TOOLS_AND_MCP.md)** - Tool calling and MCP guide
+### Complete Examples (with resources)
+
+- **[coding-agent-example/](examples/coding-agent-example/)** - AI-powered software development workflow
+  - Requirements analysis, code generation, testing, review, and documentation
+  - Complete with prompts, skills, and knowledge bases
+
+- **[content-creation-example/](examples/content-creation-example/)** - Blog posts and marketing content
+  - Research → Write → Edit pipeline with SEO optimization
+
+- **[research-assistant-example/](examples/research-assistant-example/)** - Research and analysis
+  - Literature review, data collection, synthesis, and peer review
+
+- **[customer-support-example/](examples/customer-support-example/)** - Automated support
+  - Ticket classification, KB search, response generation, and quality checking
+
+- **[data-processing-example/](examples/data-processing-example/)** - ETL pipelines
+  - Extract, transform, analyze, and report on data
+
+### Getting Started
+
+- **[basic.weave.yaml](examples/basic.weave.yaml)** - Simplest possible example
+- **[resources_example/](examples/resources_example/)** - Resource system template
+
+Each example includes a README with usage instructions and customization options.
 
 ## 🏗️ Architecture
 

@@ -1,0 +1,73 @@
+name: clean_code
+description: Write clean, maintainable code following industry best practices
+instructions: |
+  Clean Code Principles:
+
+  1. Meaningful Names
+     - Use intention-revealing names
+     - Avoid abbreviations and single letters (except i, j, k in loops)
+     - Use searchable names for constants
+     - Don't encode types in names (no Hungarian notation)
+     - Class names: nouns (User, Account)
+     - Function names: verbs (getUserData, processPayment)
+
+  2. Functions
+     - Keep functions small (< 20 lines ideal)
+     - Do one thing and do it well
+     - One level of abstraction per function
+     - Minimize parameters (0-3 ideal, avoid > 3)
+     - No side effects (or make them explicit)
+     - Command-Query Separation
+
+  3. Comments
+     - Code should be self-explanatory
+     - Comment "why" not "what"
+     - Remove commented-out code
+     - Update comments when changing code
+     - Use docstrings for public APIs
+
+  4. Formatting
+     - Consistent indentation (spaces over tabs)
+     - Group related code together
+     - Vertical whitespace for readability
+     - Horizontal alignment not necessary
+     - Line length < 100 characters
+
+  5. Error Handling
+     - Use exceptions, not error codes
+     - Don't return null (use Optional/Result types)
+     - Write try-catch-finally correctly
+     - Provide context in exceptions
+     - Don't ignore caught exceptions
+
+  6. Classes
+     - Small and focused
+     - Single Responsibility Principle
+     - High cohesion
+     - Low coupling
+     - Organize: constants → variables → methods
+
+  7. Code Smells to Avoid
+     - Long methods/classes
+     - Duplicate code
+     - Dead code
+     - Magic numbers
+     - Deep nesting
+     - Feature envy
+     - Inappropriate intimacy
+
+examples:
+  - "Refactor long function into smaller, focused functions"
+  - "Replace magic numbers with named constants"
+  - "Rename variables for clarity (x → customerName)"
+  - "Extract complex conditionals into well-named functions"
+
+required_tools:
+  - code_analyzer
+  - file_writer
+
+tags:
+  - clean-code
+  - best-practices
+  - refactoring
+  - code-quality

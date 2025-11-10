@@ -1,0 +1,361 @@
+version: "1.0"
+
+# Coding Agent Weave Example
+# Demonstrates AI-powered software development workflow with composed agents
+
+env:
+  DEFAULT_MODEL: "gpt-4"
+  CODE_LANGUAGE: "python"
+  TEST_FRAMEWORK: "pytest"
+
+storage:
+  type: "local"
+  path: ".weave/storage"
+  artifacts:
+    - code_outputs
+    - test_results
+    - review_reports
+
+observability:
+  logging:
+    level: "INFO"
+    format: "json"
+    file: ".weave/logs/coding-workflow.log"
+
+# Custom tools for coding tasks
+tools:
+  file_writer:
+    description: "Writes code to a file with proper formatting"
+    parameters:
+      type: "object"
+      properties:
+        filename:
+          type: "string"
+          description: "Name of the file to write"
+        content:
+          type: "string"
+          description: "Code content to write"
+        language:
+          type: "string"
+          description: "Programming language"
+      required: ["filename", "content"]
+
+  test_runner:
+    description: "Executes tests and returns results"
+    parameters:
+      type: "object"
+      properties:
+        test_framework:
+          type: "string"
+          description: "Test framework (pytest, jest, unittest)"
+        test_path:
+          type: "string"
+          description: "Path to test files"
+      required: ["test_framework", "test_path"]
+
+  code_analyzer:
+    description: "Analyzes code quality and identifies issues"
+    parameters:
+      type: "object"
+      properties:
+        file_path:
+          type: "string"
+          description: "Path to code file"
+        checks:
+          type: "array"
+          items:
+            type: "string"
+          description: "Check types (syntax, style, security)"
+      required: ["file_path"]
+
+# Define agents for the coding workflow
+agents:
+  # Analyzes requirements and creates specifications
+  requirements_analyzer:
+    model: "${DEFAULT_MODEL}"
+    description: "Analyzes requirements and creates technical specifications"
+    tools:
+      - web_search
+      - json_generator
+    config:
+      temperature: 0.7
+      max_tokens: 2000
+    # System prompt loaded from: .weave/prompts/requirements_analyzer.md
+    system_prompt: |
+      You are a senior software architect analyzing requirements.
+
+      Your responsibilities:
+      1. Break down requirements into implementable tasks
+      2. Identify dependencies and constraints
+      3. Create detailed technical specifications
+      4. Define acceptance criteria
+
+      Output structured JSON with:
+      - summary: Brief requirement overview
+      - tasks: Array of implementable subtasks
+      - technical_spec: Detailed specification
+      - dependencies: External libraries/APIs needed
+      - risks: Potential technical risks
+    outputs: "requirements_spec"
+
+  # Generates production-ready code
+  code_generator:
+    model: "${DEFAULT_MODEL}"
+    description: "Generates clean, maintainable code"
+    tools:
+      - file_writer
+      - code_analyzer
+      - web_search
+    inputs: "requirements_analyzer"
+    config:
+      temperature: 0.3  # Lower for deterministic code
+      max_tokens: 4000
+    # Reference: .weave/prompts/code_generator.md
+    # Skills: .weave/skills/clean_code.yaml
+    system_prompt: |
+      You are an expert software engineer writing ${CODE_LANGUAGE} code.
+
+      Coding standards:
+      - Follow language best practices and idioms
+      - Write self-documenting code with clear names
+      - Include comprehensive docstrings
+      - Implement proper error handling
+      - Follow SOLID principles
+      - Ensure code is testable and modular
+
+      For each implementation:
+      1. Review specification carefully
+      2. Plan code structure
+      3. Implement with separation of concerns
+      4. Add documentation for complex logic
+      5. Include type hints and assertions
+
+      Output with clear file organization and structure.
+    outputs: "generated_code"
+
+  # Creates comprehensive test suites
+  test_generator:
+    model: "${DEFAULT_MODEL}"
+    description: "Creates unit and integration tests"
+    tools:
+      - file_writer
+      - test_runner
+    inputs: "code_generator"
+    config:
+      temperature: 0.4
+      max_tokens: 3000
+    # Skills: .weave/skills/test_automation.yaml
+    system_prompt: |
+      You are a test automation specialist creating thorough test suites.
+
+      Testing approach:
+      - Arrange-Act-Assert pattern
+      - Cover happy paths, edge cases, and errors
+      - Aim for 80%+ code coverage
+      - Use descriptive test names
+      - Include unit and integration tests
+      - Mock external dependencies appropriately
+
+      For ${CODE_LANGUAGE} use ${TEST_FRAMEWORK}.
+
+      Test categories:
+      1. Core functionality and business logic
+      2. Error handling and validation
+      3. Edge cases and boundaries
+      4. Integration points and contracts
+      5. Performance-critical sections
+    outputs: "test_suite"
+
+  # Performs comprehensive code review
+  code_reviewer:
+    model: "${DEFAULT_MODEL}"
+    description: "Reviews code quality and security"
+    tools:
+      - code_analyzer
+      - json_generator
+    inputs:
+      - code_generator
+      - test_generator
+    config:
+      temperature: 0.5
+      max_tokens: 2000
+    # Knowledge: .weave/knowledge/code_review_checklist.md
+    system_prompt: |
+      You are a senior code reviewer focused on quality and security.
+
+      Review areas:
+      - Code Quality: readability, maintainability, structure, DRY
+      - Functionality: correctness, edge cases, error handling
+      - Security: input validation, injection prevention, auth
+      - Testing: coverage adequacy, test quality
+      - Documentation: comments, API docs, README
+
+      Provide structured review:
+      - overall_quality: 1-10 rating
+      - strengths: Positive aspects
+      - issues: Found issues (severity: critical/major/minor)
+      - suggestions: Improvement ideas
+      - security_concerns: Security issues
+      - approval_status: approved/changes_requested/rejected
+    outputs: "review_report"
+
+  # Generates project documentation
+  documentation_writer:
+    model: "${DEFAULT_MODEL}"
+    description: "Creates comprehensive documentation"
+    tools:
+      - file_writer
+    inputs:
+      - code_generator
+      - test_generator
+    config:
+      temperature: 0.6
+      max_tokens: 2500
+    # Knowledge: .weave/knowledge/documentation_guide.md
+    system_prompt: |
+      You are a technical writer creating clear documentation.
+
+      Documentation sections:
+      - README: overview, features, installation, quickstart
+      - API Docs: signatures, parameters, returns, examples
+      - Architecture: system overview, components, data flow
+      - Developer Guide: setup, build, test, contribute
+
+      Write for multiple audiences:
+      - End users: clear, simple language
+      - Developers: technical details, examples
+      - Contributors: development workflow
+
+      Use proper formatting with headings, code blocks, and lists.
+    outputs: "documentation"
+
+  # Refactors code based on feedback
+  refactoring_agent:
+    model: "${DEFAULT_MODEL}"
+    description: "Refactors code based on review feedback"
+    tools:
+      - file_writer
+      - code_analyzer
+    inputs:
+      - code_generator
+      - code_reviewer
+    config:
+      temperature: 0.3
+      max_tokens: 3000
+    # Skills: .weave/skills/refactoring.yaml
+    system_prompt: |
+      You are a refactoring specialist improving code quality.
+
+      Refactoring techniques:
+      - Extract method for complex logic
+      - Rename for clarity
+      - Simplify conditionals
+      - Remove duplication
+      - Improve error handling
+      - Optimize performance
+      - Enhance type safety
+
+      Principles:
+      - Make small, incremental changes
+      - Maintain functionality
+      - Ensure tests pass after changes
+      - Document refactoring decisions
+
+      For each refactoring:
+      1. Identify issue from review
+      2. Plan refactoring approach
+      3. Implement carefully
+      4. Verify tests pass
+      5. Document changes
+
+      Provide before/after comparison for major changes.
+    outputs: "refactored_code"
+
+# Weave orchestrations
+weaves:
+  # Complete end-to-end development workflow
+  full_coding_workflow:
+    description: |
+      Complete coding workflow from requirements to production code.
+
+      Workflow stages:
+      1. Analyze requirements → technical specs
+      2. Generate production-quality code
+      3. Create comprehensive tests
+      4. Perform thorough code review
+      5. Generate documentation
+      6. Refactor based on feedback
+
+      Use for: New features, complete modules
+    agents:
+      - requirements_analyzer
+      - code_generator
+      - test_generator
+      - code_reviewer
+      - documentation_writer
+      - refactoring_agent
+    runtime:
+      mode: "sequential"
+      timeout: 3600
+      retry:
+        max_attempts: 2
+        backoff: "exponential"
+
+  # Fast prototyping workflow
+  quick_prototype:
+    description: |
+      Fast prototyping for proof-of-concepts.
+
+      Stages: requirements → code → basic tests
+
+      Use for: Prototypes, POCs, experiments
+    agents:
+      - requirements_analyzer
+      - code_generator
+      - test_generator
+    runtime:
+      mode: "sequential"
+      timeout: 600
+
+  # Code review only workflow
+  code_review_only:
+    description: |
+      Review existing code without generation.
+
+      Use for: Code audits, PR reviews
+    agents:
+      - code_reviewer
+      - documentation_writer
+    runtime:
+      mode: "sequential"
+      timeout: 300
+
+  # Test-driven development workflow
+  tdd_workflow:
+    description: |
+      Test-driven development approach.
+
+      TDD stages: requirements → tests → code → review
+
+      Use for: Critical functionality, TDD approach
+    agents:
+      - requirements_analyzer
+      - test_generator
+      - code_generator
+      - code_reviewer
+    runtime:
+      mode: "sequential"
+      timeout: 1800
+
+# Runtime configuration
+runtime:
+  executor:
+    type: "threaded"
+    max_workers: 4
+  error_handling:
+    strategy: "fail_fast"
+    retry_policy:
+      max_attempts: 3
+      backoff_factor: 2
+  resource_limits:
+    max_memory_mb: 4096
