@@ -24,6 +24,13 @@ Weave allows you to define and compose AI agents using YAML configuration files 
 - 🔧 **Plugin Execution** - Plugins run during agent execution
 - 📈 **Full Observability** - Track prompts, outputs, and token usage
 
+### V3 Features (NEW! 🚀)
+- ☁️ **Cloud Deployment** - Deploy to AWS Lambda, GCP Cloud Functions, or Docker
+- 🔐 **Authentication** - Built-in credential management for cloud providers
+- 📦 **Extensible Providers** - Add your own deployment providers
+- 🌍 **Multi-Cloud** - Deploy the same workflow to multiple clouds
+- 🎯 **Production Ready** - One command deployment with endpoints
+
 ### Additional Features
 - 🧪 **Mock Execution** - Test workflows without API calls (default mode)
 - 🔧 **Tool Calling** - Built-in and custom tools with JSON schema validation
@@ -31,7 +38,6 @@ Weave allows you to define and compose AI agents using YAML configuration files 
 - 🔌 **Plugin System** - Built-in and custom plugins for extending agent capabilities
 - 📁 **Resource Management** - Organize prompts, skills, and knowledge bases in files
 - 💾 **State Management** - Execution state tracking with run history
-- 🎯 **Deployment Ready** - Production configuration with observability, retries, and health checks
 
 ## 📦 Installation
 
@@ -69,6 +75,22 @@ pip install -e ".[watch]"
 pip install -e ".[all]"
 ```
 
+### With Cloud Deployment (V3)
+
+```bash
+# AWS deployment
+pip install -e ".[aws]"
+
+# GCP deployment
+pip install -e ".[gcp]"
+
+# Docker deployment
+pip install -e ".[docker]"
+
+# All deployment providers
+pip install -e ".[deploy]"
+```
+
 ### Using pip (coming soon)
 
 ```bash
@@ -77,6 +99,9 @@ pip install weave-cli
 
 # With real LLM support
 pip install weave-cli[llm]
+
+# With deployment
+pip install weave-cli[deploy]
 
 # With all features
 pip install weave-cli[all]
@@ -235,7 +260,34 @@ Summary: 3 succeeded, 0 failed
 # Automatically re-runs with new config
 ```
 
-### 4. Visualize the Dependency Graph
+### 6. Cloud Deployment (V3)
+
+Deploy your workflows to production:
+
+```bash
+# Deploy to AWS Lambda
+weave deploy --name my-weave --provider aws --region us-east-1
+
+# Deploy to GCP Cloud Functions
+weave deploy --name my-weave --provider gcp --region us-central1
+
+# Deploy to Docker
+weave deploy --name my-weave --provider docker
+
+# List all deployments
+weave deployments
+
+# Destroy deployment
+weave undeploy my-weave --provider aws
+```
+
+**What you get:**
+- ☁️ Serverless execution on AWS/GCP
+- 🔗 HTTP endpoint for invoking your workflow
+- 🔐 Automatic credential management
+- 📊 Deployment status tracking
+
+### 7. Visualize the Dependency Graph
 
 ```bash
 weave graph

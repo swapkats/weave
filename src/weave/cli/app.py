@@ -993,6 +993,167 @@ def inspect(
         raise typer.Exit(1)
 
 
+@app.command()
+def deploy(
+    config: Path = typer.Option(".weave.yaml", "--config", "-c", help="Path to config file"),
+    name: str = typer.Option(..., "--name", "-n", help="Deployment name"),
+    provider: str = typer.Option(..., "--provider", "-p", help="Provider (aws, gcp, docker)"),
+    deploy_type: Optional[str] = typer.Option(None, "--type", "-t", help="Deployment type (lambda, function, etc)"),
+    region: Optional[str] = typer.Option(None, "--region", "-r", help="Cloud region"),
+    push_only: bool = typer.Option(False, "--push-only", help="Build/push only, don't deploy"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+) -> None:
+    """
+    Deploy Weave to cloud infrastructure.
+
+    Deploy your Weave workflows to AWS Lambda, GCP Cloud Functions, or Docker containers.
+    """
+    try:
+        from ..deploy.manager import DeploymentManager
+        from ..deploy.provider import DeploymentConfig
+
+        # Load Weave config
+        weave_config = load_config_from_path(config)
+
+        # Build deployment config
+        deploy_config = DeploymentConfig(
+            name=name,
+            provider=provider,
+            region=region,
+            config_file=str(config),
+        )
+
+        # Add deployment type if specified
+        if deploy_type:
+            deploy_config.config["type"] = deploy_type
+
+        # Add push-only flag for Docker
+        if push_only and provider == "docker":
+            deploy_config.config["run"] = False
+
+        # Initialize deployment manager
+        manager = DeploymentManager(console=console, verbose=verbose)
+
+        # Deploy
+        info = manager.deploy(deploy_config)
+
+        console.print(f"\n[bold green]Deployment complete![/bold green]")
+        console.print(f"[bold]Name:[/bold] {info.name}")
+        console.print(f"[bold]Provider:[/bold] {info.provider}")
+        console.print(f"[bold]Status:[/bold] {info.status.value}")
+
+        if info.endpoint:
+            console.print(f"[bold]Endpoint:[/bold] {info.endpoint}")
+
+        if info.region:
+            console.print(f"[bold]Region:[/bold] {info.region}")
+
+        console.print()
+
+    except Exception as e:
+        output.print_error(e)
+        raise typer.Exit(1)
+
+
+@app.command()
+def deployments(
+    provider: Optional[str] = typer.Option(None, "--provider", "-p", help="Filter by provider"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+) -> None:
+    """
+    List all deployments across providers.
+
+    Shows deployed Weave workflows in AWS, GCP, and Docker.
+    """
+    try:
+        from ..deploy.manager import DeploymentManager
+        from rich.table import Table
+
+        # Initialize deployment manager
+        manager = DeploymentManager(console=console, verbose=verbose)
+
+        # List deployments
+        all_deployments = manager.list_deployments(provider_name=provider)
+
+        if not all_deployments:
+            console.print("[yellow]No deployments found[/yellow]\n")
+            return
+
+        # Create table
+        table = Table(title="Deployments", show_header=True, header_style="bold magenta")
+        table.add_column("Name", style="cyan")
+        table.add_column("Provider", style="green")
+        table.add_column("Status", style="yellow")
+        table.add_column("Region", style="white")
+        table.add_column("Endpoint", style="blue", no_wrap=False)
+
+        for provider_name, deployments in all_deployments.items():
+            for dep in deployments:
+                status_emoji = {
+                    "active": "✓",
+                    "deploying": "⏳",
+                    "failed": "✗",
+                    "pending": "⏸",
+                }.get(dep.status.value, "?")
+
+                endpoint = dep.endpoint[:50] + "..." if dep.endpoint and len(dep.endpoint) > 50 else dep.endpoint or "-"
+
+                table.add_row(
+                    dep.name,
+                    provider_name,
+                    f"{status_emoji} {dep.status.value}",
+                    dep.region or "-",
+                    endpoint,
+                )
+
+        console.print("\n")
+        console.print(table)
+        console.print(f"\n[bold]Total deployments:[/bold] {sum(len(d) for d in all_deployments.values())}\n")
+
+    except Exception as e:
+        output.print_error(e)
+        raise typer.Exit(1)
+
+
+@app.command()
+def undeploy(
+    name: str = typer.Argument(..., help="Deployment name"),
+    provider: str = typer.Option(..., "--provider", "-p", help="Provider (aws, gcp, docker)"),
+    force: bool = typer.Option(False, "--force", "-f", help="Force destroy without confirmation"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+) -> None:
+    """
+    Destroy a deployed Weave instance.
+
+    Removes the deployment from the cloud provider.
+    """
+    try:
+        from ..deploy.manager import DeploymentManager
+
+        # Confirm destruction unless --force
+        if not force:
+            console.print(f"[yellow]⚠️  This will destroy deployment '{name}' on {provider}[/yellow]")
+            confirm = typer.confirm("Are you sure?")
+            if not confirm:
+                console.print("Cancelled.")
+                raise typer.Exit(0)
+
+        # Initialize deployment manager
+        manager = DeploymentManager(console=console, verbose=verbose)
+
+        # Destroy deployment
+        success = manager.destroy(provider, name)
+
+        if success:
+            console.print(f"\n[bold green]✓ Deployment destroyed:[/bold green] {name}\n")
+        else:
+            console.print(f"\n[yellow]⚠️  Could not destroy deployment: {name}[/yellow]\n")
+
+    except Exception as e:
+        output.print_error(e)
+        raise typer.Exit(1)
+
+
 def main() -> None:
     """Entry point for the CLI."""
     app()
