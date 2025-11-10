@@ -90,6 +90,14 @@ class TestExampleFeatureCoverage:
     #     mcp_example = EXAMPLES_DIR / "mcp-integration.weave.yaml"
     #     assert mcp_example.exists()
 
+    def test_resources_example_exists(self):
+        """Should have a resources example."""
+        resources_example = EXAMPLES_DIR / "resources_example"
+        assert resources_example.exists()
+        assert resources_example.is_dir()
+
+        config_file = resources_example / ".weave.yaml"
+        assert config_file.exists()
 
     # NOTE: These examples exist as directories with .weave.yaml files inside
     # The standalone .yaml files at root level don't exist

@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from ..core.exceptions import ConfigError
 from ..core.models import WeaveConfig
 from .env import substitute_env_vars
+from .resources import ResourceProcessor
 
 
 def load_config_from_path(path: Path) -> WeaveConfig:
@@ -36,16 +37,17 @@ def load_config_from_path(path: Path) -> WeaveConfig:
     except Exception as e:
         raise ConfigError(f"Failed to read config file: {e}")
 
-    return load_config(raw_content, str(path))
+    return load_config(raw_content, str(path), config_path=path)
 
 
-def load_config(content: str, source: str = "<string>") -> WeaveConfig:
+def load_config(content: str, source: str = "<string>", config_path: Path = None) -> WeaveConfig:
     """
     Parse Weave configuration from string.
 
     Args:
         content: YAML content as string
         source: Source name for error messages
+        config_path: Optional path to config file (for resource loading)
 
     Returns:
         Parsed WeaveConfig object
@@ -67,6 +69,16 @@ def load_config(content: str, source: str = "<string>") -> WeaveConfig:
 
     if not isinstance(data, dict):
         raise ConfigError(f"Config must be a YAML mapping, got {type(data).__name__}")
+
+    # Process resource references
+    if config_path:
+        try:
+            processor = ResourceProcessor(config_path)
+            data = processor.process_config(data)
+        except Exception as e:
+            # Resource loading is non-critical, log warning but continue
+            import warnings
+            warnings.warn(f"Failed to process resources: {e}")
 
     # Validate with Pydantic
     try:

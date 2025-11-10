@@ -57,6 +57,7 @@ class LLMExecutor:
         config: Optional["WeaveConfig"] = None,
         session: Optional["ConversationSession"] = None,
         memory_manager: Optional[MemoryManager] = None,
+        resource_loader=None,
     ):
         """Initialize LLM executor.
 
@@ -66,12 +67,14 @@ class LLMExecutor:
             config: Weave configuration
             session: Conversation session for history
             memory_manager: Memory manager for agent memory
+            resource_loader: ResourceLoader for loading agent resources
         """
         self.console = console or Console()
         self.verbose = verbose
         self.config = config
         self.session = session
         self.memory_manager = memory_manager
+        self.resource_loader = resource_loader
 
         # Initialize API clients
         self._init_openai()
@@ -206,6 +209,60 @@ class LLMExecutor:
             parts.append(agent.prompt)
         else:
             parts.append("You are a helpful AI assistant.")
+
+        # Add skills from resources
+        if agent.skills and self.resource_loader:
+            from ..resources.models import ResourceType
+
+            skills_content = []
+            for skill_name in agent.skills:
+                skill = self.resource_loader.get_resource(ResourceType.SKILL, skill_name)
+                if skill:
+                    skills_content.append(f"### Skill: {skill.name}")
+                    if skill.description:
+                        skills_content.append(skill.description)
+                    if skill.instructions:
+                        skills_content.append(skill.instructions)
+
+            if skills_content:
+                parts.append("\n## Your Skills")
+                parts.extend(skills_content)
+
+        # Add knowledge bases from resources
+        if agent.knowledge and self.resource_loader:
+            from ..resources.models import ResourceType
+
+            knowledge_content = []
+            for kb_name in agent.knowledge:
+                kb = self.resource_loader.get_resource(ResourceType.KNOWLEDGE_BASE, kb_name)
+                if kb:
+                    knowledge_content.append(f"### Knowledge: {kb.name}")
+                    knowledge_content.append(kb.content)
+
+            if knowledge_content:
+                parts.append("\n## Knowledge Base")
+                parts.append("Use this information to inform your responses:")
+                parts.extend(knowledge_content)
+
+        # Add behaviors from resources
+        if agent.behaviors and self.resource_loader:
+            from ..resources.models import ResourceType
+
+            behavior_content = []
+            for behavior_name in agent.behaviors:
+                behavior = self.resource_loader.get_resource(ResourceType.BEHAVIOR, behavior_name)
+                if behavior:
+                    behavior_content.append(f"### Behavior: {behavior.name}")
+                    if behavior.personality:
+                        behavior_content.append(f"Personality: {behavior.personality}")
+                    if behavior.constraints:
+                        behavior_content.append("Constraints:")
+                        for constraint in behavior.constraints:
+                            behavior_content.append(f"  - {constraint}")
+
+            if behavior_content:
+                parts.append("\n## Behavioral Guidelines")
+                parts.extend(behavior_content)
 
         # Add long-term memory context if available
         if self.memory_manager:
