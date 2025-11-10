@@ -20,6 +20,7 @@ Welcome to the Weave CLI documentation! Weave is a declarative agent orchestrati
 - [Environment Variables](guides/environment.md) - Using environment variables
 - [Visualization](guides/visualization.md) - Working with graphs
 - [Plugins](guides/plugins.md) - Extending Weave with custom tools
+- [Resources](guides/resources.md) - Managing prompts, skills, and knowledge bases
 
 ### Architecture
 - [Overview](architecture/overview.md) - System architecture
@@ -31,6 +32,7 @@ Welcome to the Weave CLI documentation! Weave is a declarative agent orchestrati
 - **Need command help?** → [CLI Commands](reference/cli-commands.md)
 - **Writing your first config?** → [Configuration Reference](reference/configuration.md)
 - **Want to extend Weave?** → [Plugins Guide](guides/plugins.md)
+- **Organizing agent resources?** → [Resources Guide](guides/resources.md)
 - **Having issues?** → [Error Messages](reference/errors.md)
 
 ## 💡 Examples
