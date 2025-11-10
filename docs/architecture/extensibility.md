@@ -193,7 +193,7 @@ executor.register_hook(webhook)
 Register multiple hooks:
 
 ```python
-executor = MockExecutor()
+executor = Executor()
 
 # Add multiple hooks
 executor.register_hook(LoggingHook("weave.log"))
@@ -302,7 +302,7 @@ agents:
 ```python
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from weave.runtime import MockExecutor
+from weave.runtime import Executor
 from weave.parser import load_config_from_path
 from weave.core.graph import DependencyGraph
 
@@ -312,7 +312,7 @@ def run_weave():
     graph.build("my_weave")
     graph.validate()
 
-    executor = MockExecutor()
+    executor = Executor()
     summary = executor.execute_flow(graph, "my_weave")
 
     if summary.failed > 0:

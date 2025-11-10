@@ -196,19 +196,18 @@ weave plan -c custom.yaml
 
 ## Execution Model
 
-### v0.1.0 (Current)
+### v1.0 (Current)
 
-- **Mock Execution**: Simulates agent execution
-- **Sequential**: Agents run one after another
-- **Realistic Delays**: Random 0.5-2.5 second delays
-- **Mock Outputs**: Generated placeholder results
-
-### v2.0 (Planned)
-
-- **Real Execution**: Actual LLM API calls
-- **Parallel**: Independent agents run concurrently
+- **Real Execution**: Actual LLM API calls to OpenAI and Anthropic
+- **Sequential**: Agents run one after another in dependency order
 - **State Management**: Track execution state
-- **Retry Logic**: Handle failures gracefully
+- **Tool Integration**: Built-in and MCP tools available
+
+### Future Enhancements
+
+- **Parallel Execution**: Independent agents run concurrently
+- **Advanced Retry Logic**: Configurable retry strategies
+- **Enhanced Observability**: More detailed execution traces
 
 ## Environment Variables
 

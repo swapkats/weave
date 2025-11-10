@@ -6,7 +6,9 @@ agents:
   analyzer:
     model: "gpt-4"
     tools:
-      - data_analyzer
+      - calculator
+      - json_validator
+      - list_operations
     config:
       temperature: 0.3
     outputs: "analysis_report"
@@ -14,7 +16,9 @@ agents:
   reporter:
     model: "claude-3-opus"
     tools:
-      - report_generator
+      - file_write
+      - string_formatter
+      - text_length
     inputs: "analyzer"
     config:
       temperature: 0.7

@@ -84,8 +84,9 @@ agents:
   researcher:
     model: "gpt-4"
     tools:
-      - web_search
-      - summarizer
+      - http_request
+      - file_read
+      - json_validator
     config:
       temperature: 0.7
       max_tokens: 1000
@@ -94,7 +95,8 @@ agents:
   writer:
     model: "claude-3-opus"
     tools:
-      - text_generator
+      - text_length
+      - string_formatter
     inputs: "researcher"  # Takes input from researcher
     config:
       temperature: 0.9
@@ -104,8 +106,8 @@ agents:
   editor:
     model: "gpt-4"
     tools:
-      - grammar_checker
-      - fact_checker
+      - file_write
+      - text_length
     inputs: "writer"
     config:
       temperature: 0.3
