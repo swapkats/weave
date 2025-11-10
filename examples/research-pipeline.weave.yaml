@@ -1,0 +1,57 @@
+# Research Pipeline - Multi-stage research and synthesis
+
+version: "1.0"
+
+agents:
+  literature_review:
+    model: "gpt-4"
+    tools:
+      - academic_search
+      - pdf_extractor
+      - citation_manager
+    config:
+      temperature: 0.5
+      max_tokens: 3000
+    outputs: "literature_summary"
+
+  data_gatherer:
+    model: "gpt-4"
+    tools:
+      - web_scraper
+      - api_client
+      - data_validator
+    config:
+      temperature: 0.3
+    outputs: "raw_data"
+
+  synthesizer:
+    model: "claude-3-opus"
+    tools:
+      - text_analyzer
+      - summarizer
+    # Takes both literature and data
+    inputs: "literature_review"  # Can only specify one, but receives context
+    config:
+      temperature: 0.7
+      max_tokens: 4000
+    outputs: "synthesis_report"
+
+  peer_reviewer:
+    model: "gpt-4"
+    tools:
+      - fact_checker
+      - logic_analyzer
+      - citation_validator
+    inputs: "synthesizer"
+    config:
+      temperature: 0.2
+    outputs: "reviewed_paper"
+
+weaves:
+  academic_research:
+    description: "Complete academic research workflow"
+    agents:
+      - literature_review
+      - data_gatherer
+      - synthesizer
+      - peer_reviewer

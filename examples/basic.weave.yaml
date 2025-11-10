@@ -1,0 +1,28 @@
+# Basic Weave Example - Simple linear pipeline
+
+version: "1.0"
+
+agents:
+  analyzer:
+    model: "gpt-4"
+    tools:
+      - data_analyzer
+    config:
+      temperature: 0.3
+    outputs: "analysis_report"
+
+  reporter:
+    model: "claude-3-opus"
+    tools:
+      - report_generator
+    inputs: "analyzer"
+    config:
+      temperature: 0.7
+    outputs: "final_report"
+
+weaves:
+  simple_pipeline:
+    description: "Analyze data and generate report"
+    agents:
+      - analyzer
+      - reporter
