@@ -2,7 +2,7 @@
 
 **Declarative agent orchestration framework**
 
-Weave allows you to define and compose AI agents using YAML configuration files and execute them with a simple, elegant CLI. Define your agent workflows declaratively — infrastructure-as-code principles, applied to AI agents.
+Weave allows you to define and compose AI agents using YAML configuration files and execute them with a simple, elegant CLI. Think of it as convention over config for composing AI agents.
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
