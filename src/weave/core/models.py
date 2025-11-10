@@ -454,6 +454,16 @@ class DeploymentConfig(BaseModel):
     allow_deploy_on_holiday: bool = False
 
 
+class MCPServerConfig(BaseModel):
+    """MCP server configuration."""
+
+    command: str  # Command to start the MCP server
+    args: List[str] = Field(default_factory=list)  # Command arguments
+    env: Dict[str, str] = Field(default_factory=dict)  # Environment variables
+    description: str = ""  # Server description
+    enabled: bool = True  # Whether the server is enabled
+
+
 class WeaveConfig(BaseModel):
     """Complete Weave configuration file."""
 
@@ -471,8 +481,11 @@ class WeaveConfig(BaseModel):
     infrastructure: Optional[InfrastructureConfig] = None  # Infrastructure requirements
     deployment: Optional[DeploymentConfig] = None  # Deployment strategy
 
-    # Agent and workflow definitions
+    # Tool and server configuration
     tools: Dict[str, CustomToolDef] = Field(default_factory=dict)  # Custom tool definitions
+    mcp_servers: Dict[str, MCPServerConfig] = Field(default_factory=dict)  # MCP server configurations
+
+    # Agent and workflow definitions
     agents: Dict[str, Agent]
     weaves: Dict[str, Weave]
 

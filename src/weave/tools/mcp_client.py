@@ -2,11 +2,14 @@
 
 import json
 import subprocess
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from pathlib import Path
 from pydantic import BaseModel, Field
 
 from weave.tools.models import ToolDefinition, ToolParameter, ParameterType, ToolResult
+
+if TYPE_CHECKING:
+    from weave.core.models import WeaveConfig
 
 
 class MCPServer(BaseModel):
@@ -23,18 +26,43 @@ class MCPServer(BaseModel):
 class MCPClient:
     """Client for interacting with MCP servers."""
 
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(
+        self,
+        config_path: Optional[Path] = None,
+        weave_config: Optional["WeaveConfig"] = None,
+    ):
         """Initialize MCP client.
 
         Args:
             config_path: Path to MCP configuration file (default: .weave/mcp.yaml)
+            weave_config: Optional WeaveConfig to load MCP servers from
         """
         self.config_path = config_path or Path(".weave/mcp.yaml")
         self.servers: Dict[str, MCPServer] = {}
         self._server_processes: Dict[str, Any] = {}
 
-        if self.config_path.exists():
+        # Load from WeaveConfig first (higher priority)
+        if weave_config and weave_config.mcp_servers:
+            self.load_from_weave_config(weave_config)
+        # Fall back to separate config file
+        elif self.config_path.exists():
             self.load_config()
+
+    def load_from_weave_config(self, weave_config: "WeaveConfig") -> None:
+        """Load MCP server configurations from WeaveConfig.
+
+        Args:
+            weave_config: WeaveConfig instance containing MCP server configs
+        """
+        for name, server_config in weave_config.mcp_servers.items():
+            self.servers[name] = MCPServer(
+                name=name,
+                command=server_config.command,
+                args=server_config.args,
+                env=server_config.env,
+                description=server_config.description,
+                enabled=server_config.enabled,
+            )
 
     def load_config(self) -> None:
         """Load MCP server configurations from file."""

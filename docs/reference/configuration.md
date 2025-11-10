@@ -8,6 +8,7 @@ Complete reference for all Weave configuration options.
 - [Root Level](#root-level)
 - [Storage Configuration](#storage-configuration)
 - [Tool Definitions](#tool-definitions)
+- [MCP Server Configuration](#mcp-server-configuration)
 - [Agent Configuration](#agent-configuration)
   - [Agent Capabilities](#agent-capabilities)
   - [Model Configuration](#model-configuration)
@@ -28,7 +29,10 @@ The top-level structure of a Weave configuration file.
 version: "1.0"
 env: {}
 storage: {}
+observability: {}
+runtime: {}
 tools: {}
+mcp_servers: {}
 agents: {}
 weaves: {}
 ```
@@ -61,11 +65,29 @@ env:
 **Default**: `null`
 **Description**: Global storage configuration for the entire weave. See [Storage Configuration](#storage-configuration) for details.
 
+### `observability` (optional)
+
+**Type**: [`ObservabilityConfig`](./observability-and-runtime.md#observability-configuration)
+**Default**: `null`
+**Description**: Observability configuration for logging, metrics, and tracing.
+
+### `runtime` (optional)
+
+**Type**: [`RuntimeConfig`](./observability-and-runtime.md#runtime-configuration)
+**Default**: `null`
+**Description**: Runtime execution configuration including modes, retries, timeouts, and rate limiting. Includes `dry_run` and `verbose` options.
+
 ### `tools` (optional)
 
 **Type**: `object`
 **Default**: `{}`
 **Description**: Custom tool definitions. See [Tool Definitions](#tool-definitions) for details.
+
+### `mcp_servers` (optional)
+
+**Type**: `object`
+**Default**: `{}`
+**Description**: MCP (Model Context Protocol) server configurations. See [MCP Server Configuration](#mcp-server-configuration) for details.
 
 ### `agents` (required)
 
@@ -239,6 +261,92 @@ tools:
         enum: ["low", "normal", "high"]
         default: "normal"
 ```
+
+---
+
+## MCP Server Configuration
+
+Configure external MCP (Model Context Protocol) servers that provide additional tools to agents.
+
+```yaml
+mcp_servers:
+  server_name:
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-name"]
+    env:
+      API_KEY: "${API_KEY}"
+    description: "Server description"
+    enabled: true
+```
+
+### MCP Server Structure
+
+#### `command` (required)
+
+**Type**: `string`
+**Description**: Command to start the MCP server (e.g., `"npx"`, `"python"`, `"node"`).
+
+#### `args`
+
+**Type**: `array[string]`
+**Default**: `[]`
+**Description**: Command-line arguments for the MCP server.
+
+#### `env`
+
+**Type**: `object`
+**Default**: `{}`
+**Description**: Environment variables to set for the MCP server. Supports `${VAR}` substitution from environment.
+
+#### `description`
+
+**Type**: `string`
+**Default**: `""`
+**Description**: Human-readable description of the MCP server's functionality.
+
+#### `enabled`
+
+**Type**: `boolean`
+**Default**: `true`
+**Description**: Whether the MCP server is enabled and should be loaded.
+
+### Example
+
+```yaml
+mcp_servers:
+  # Filesystem operations
+  filesystem:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+    description: "File system operations (read, write, list)"
+    enabled: true
+
+  # GitHub integration
+  github:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-github"
+    env:
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"
+    description: "GitHub API integration"
+    enabled: true
+
+  # Web fetching
+  web:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-fetch"
+    description: "Web fetching and scraping"
+    enabled: true
+```
+
+**Note**: MCP servers provide tools that agents can reference in their `tools` list. When an agent uses a tool from an MCP server, the server is automatically started and managed.
+
+See [MCP Integration Guide](../guides/tool-calling.md#mcp-integration) for more details.
 
 ---
 
@@ -688,6 +796,20 @@ tools:
       body:
         type: "string"
         required: true
+
+# MCP server configurations
+mcp_servers:
+  filesystem:
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-filesystem"]
+    description: "File system operations"
+    enabled: true
+
+  web:
+    command: "npx"
+    args: ["-y", "@modelcontextprotocol/server-fetch"]
+    description: "Web fetching and scraping"
+    enabled: true
 
 # Agent definitions
 agents:
