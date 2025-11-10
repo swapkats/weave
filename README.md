@@ -515,63 +515,6 @@ agents:
       custom_param: "value"
 ```
 
-#### Weave Definition
-
-```yaml
-weaves:
-  weave_name:
-    description: "What this weave does"  # Optional
-    agents: [agent1, agent2, agent3]     # Required: Agent list
-```
-
-#### Environment Variables
-
-Use `${VAR}` syntax to reference environment variables:
-
-```yaml
-env:
-  API_KEY: "${OPENAI_API_KEY}"
-  DEFAULT_MODEL: "${MODEL:-gpt-4}"  # With default value
-
-agents:
-  my_agent:
-    model: "${DEFAULT_MODEL}"
-```
-
-### Dependency Resolution
-
-Weave automatically resolves agent dependencies based on `inputs`:
-
-```yaml
-agents:
-  A:
-    model: "gpt-4"
-    outputs: "result_a"
-
-  B:
-    model: "gpt-4"
-    inputs: "A"  # B depends on A
-    outputs: "result_b"
-
-  C:
-    model: "gpt-4"
-    inputs: "B"  # C depends on B
-
-# Execution order: A → B → C
-```
-
-Weave detects circular dependencies and invalid references:
-
-```yaml
-agents:
-  A:
-    inputs: "B"  # ❌ Circular!
-  B:
-    inputs: "A"
-
-# Error: Circular dependency detected: A → B → A
-```
-
 ## 📂 Examples
 
 The `examples/` directory contains production-ready examples for common use cases:
@@ -635,39 +578,6 @@ Each example includes a README with usage instructions and customization options
 - **Plugins** (`src/weave/plugins/`) - Plugin system with built-in and custom plugins
 - **Resources** (`src/weave/resources/`) - File-based resource loading for prompts, skills, etc.
 
-## 🔮 Roadmap
-
-### v1.0 (Current) ✅
-- ✅ Declarative YAML configuration
-- ✅ Dependency graph resolution
-- ✅ Mock execution engine
-- ✅ CLI with plan/apply/graph/tools/mcp commands
-- ✅ ASCII and Mermaid visualization
-- ✅ Tool calling with JSON schema validation
-- ✅ Built-in tools (calculator, text processing, data validation)
-- ✅ Custom tool definitions in YAML
-- ✅ MCP (Model Context Protocol) server integration
-- ✅ Plugin system with built-in and custom plugins
-- ✅ Resource management for prompts, skills, and knowledge bases
-
-### v2.0 (Planned)
-- 🔄 Real LLM execution via APIs
-- 🔄 Multiple provider support (OpenAI, Anthropic, etc.)
-- 🔄 Real tool calling during LLM execution
-- 🔄 MCP protocol implementation (full spec)
-- 🔄 State management and drift detection
-- 🔄 Parallel execution support
-- 🔄 Resource loading integration (@prompts/, @skills/ syntax)
-- 🔄 Agent module registry
-- 🔄 Tool result caching
-
-### v3.0 (Future)
-- 📦 Remote module system
-- 🌐 Web UI dashboard
-- 📊 Execution analytics
-- 🔐 Secret management
-- 🔄 Advanced plugin marketplace
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -694,10 +604,6 @@ mypy src/
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
-## 🙏 Acknowledgments
-
-Inspired by declarative infrastructure tools, workflow DAG managers, and agent composition patterns.
 
 ## 📬 Contact
 
