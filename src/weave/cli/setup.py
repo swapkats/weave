@@ -80,41 +80,57 @@ def setup_api_keys(console: Console) -> None:
     """
     console.print("[bold]2. Configure API Keys[/bold]\n")
 
-    console.print("Weave supports OpenAI and Anthropic for real LLM execution.")
-    console.print("[dim]You can skip this and configure later via environment variables.[/dim]\n")
+    console.print("Weave supports multiple LLM providers:")
+    console.print("  • OpenAI (GPT-4, GPT-3.5)")
+    console.print("  • Anthropic (Claude)")
+    console.print("  • OpenRouter (multi-model access)")
+    console.print("\n[dim]Keys are stored encrypted in ~/.weave/api_keys.yaml[/dim]")
+    console.print("[dim]You can skip this and use environment variables instead.[/dim]\n")
 
     configure = Confirm.ask("Configure API keys now?", default=False)
 
     if not configure:
         console.print("[dim]Skipped - you can set these later:[/dim]")
+        console.print("[dim]  weave keys --set openai[/dim]")
+        console.print("[dim]  weave keys --set anthropic[/dim]")
+        console.print("[dim]Or use environment variables:[/dim]")
         console.print("[dim]  export OPENAI_API_KEY='sk-...'[/dim]")
         console.print("[dim]  export ANTHROPIC_API_KEY='sk-ant-...'[/dim]\n")
         return
 
-    # Create .env file
-    env_file = Path.cwd() / ".env"
-    env_lines = []
+    # Use API key manager
+    from ..core.api_keys import get_key_manager
+    manager = get_key_manager()
+
+    configured_count = 0
 
     # OpenAI
     if Confirm.ask("Configure OpenAI API key?", default=True):
         api_key = Prompt.ask("Enter your OpenAI API key", password=True)
-        if api_key:
-            env_lines.append(f"OPENAI_API_KEY={api_key}")
-            console.print("[green]✓ OpenAI API key configured[/green]")
+        if api_key and api_key.strip():
+            manager.set_key("openai", api_key.strip())
+            console.print("[green]✓ OpenAI API key saved (encrypted)[/green]")
+            configured_count += 1
 
     # Anthropic
-    if Confirm.ask("Configure Anthropic API key?", default=True):
+    if Confirm.ask("Configure Anthropic API key?", default=False):
         api_key = Prompt.ask("Enter your Anthropic API key", password=True)
-        if api_key:
-            env_lines.append(f"ANTHROPIC_API_KEY={api_key}")
-            console.print("[green]✓ Anthropic API key configured[/green]")
+        if api_key and api_key.strip():
+            manager.set_key("anthropic", api_key.strip())
+            console.print("[green]✓ Anthropic API key saved (encrypted)[/green]")
+            configured_count += 1
 
-    # Write .env file
-    if env_lines:
-        with open(env_file, "w") as f:
-            f.write("\n".join(env_lines) + "\n")
-        console.print(f"\n[green]✓ Created {env_file}[/green]")
-        console.print("[yellow]⚠️  Remember to add .env to .gitignore![/yellow]\n")
+    # OpenRouter
+    if Confirm.ask("Configure OpenRouter API key?", default=False):
+        api_key = Prompt.ask("Enter your OpenRouter API key", password=True)
+        if api_key and api_key.strip():
+            manager.set_key("openrouter", api_key.strip())
+            console.print("[green]✓ OpenRouter API key saved (encrypted)[/green]")
+            configured_count += 1
+
+    if configured_count > 0:
+        console.print(f"\n[green]✓ Configured {configured_count} API key(s)[/green]")
+        console.print("[dim]Stored encrypted in ~/.weave/api_keys.yaml[/dim]\n")
     else:
         console.print("[dim]No API keys configured[/dim]\n")
 
@@ -299,14 +315,21 @@ def check_installation(console: Optional[Console] = None) -> None:
     else:
         checks.add_row("Config Dir", "[yellow]⚠ Missing[/yellow]", "Run: weave setup")
 
-    # Check API keys
-    if os.getenv("OPENAI_API_KEY"):
-        checks.add_row("OpenAI Key", "[green]✓ Set[/green]", "")
+    # Check API keys (both config and env vars)
+    from ..core.api_keys import get_key_manager
+    manager = get_key_manager()
+
+    openai_key = manager.get_key("openai")
+    if openai_key:
+        source = "env var" if os.getenv("OPENAI_API_KEY") else "config"
+        checks.add_row("OpenAI Key", "[green]✓ Set[/green]", source)
     else:
         checks.add_row("OpenAI Key", "[dim]- Not set[/dim]", "")
 
-    if os.getenv("ANTHROPIC_API_KEY"):
-        checks.add_row("Anthropic Key", "[green]✓ Set[/green]", "")
+    anthropic_key = manager.get_key("anthropic")
+    if anthropic_key:
+        source = "env var" if os.getenv("ANTHROPIC_API_KEY") else "config"
+        checks.add_row("Anthropic Key", "[green]✓ Set[/green]", source)
     else:
         checks.add_row("Anthropic Key", "[dim]- Not set[/dim]", "")
 
@@ -319,9 +342,10 @@ def check_installation(console: Optional[Console] = None) -> None:
     if not weave_dir.exists():
         console.print("  • Run [cyan]weave setup[/cyan] to configure Weave")
 
-    if not os.getenv("OPENAI_API_KEY") and not os.getenv("ANTHROPIC_API_KEY"):
+    if not openai_key and not anthropic_key:
         console.print("  • Set API keys for real LLM execution:")
-        console.print("    [dim]export OPENAI_API_KEY='sk-...'[/dim]")
+        console.print("    [cyan]weave keys --set openai[/cyan]")
+        console.print("    [dim]or export OPENAI_API_KEY='sk-...'[/dim]")
 
     try:
         __import__("openai")

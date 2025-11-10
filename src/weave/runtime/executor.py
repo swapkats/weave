@@ -52,6 +52,8 @@ class Executor:
         console: Optional[Console] = None,
         verbose: bool = False,
         config: Optional[WeaveConfig] = None,
+        session: Optional["ConversationSession"] = None,
+        session_id: Optional[str] = None,
     ):
         """Initialize executor.
 
@@ -59,12 +61,26 @@ class Executor:
             console: Rich console for output
             verbose: Enable verbose logging
             config: Weave configuration
+            session: Existing conversation session to continue
+            session_id: Session ID for saving conversation
         """
         self.console = console or Console()
         self.verbose = verbose
         self.config = config
         self.outputs: Dict[str, AgentOutput] = {}
         self.run_id = str(uuid.uuid4())[:8]
+
+        # Session management
+        self.session = session
+        self.session_id = session_id
+        if session_id and not session:
+            # Create new session
+            from ..core.sessions import ConversationSession
+            self.session = ConversationSession(
+                session_id=session_id,
+                weave_name=None,  # Will be set during execution
+                agent_name=None,
+            )
 
         # Initialize LLM executor
         self.llm_executor = LLMExecutor(
