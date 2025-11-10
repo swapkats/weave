@@ -3,11 +3,51 @@ version: "1.0"
 # Example: Using MCP (Model Context Protocol) tools
 # This demonstrates integrating external MCP servers for extended functionality
 #
-# Prerequisites:
-# 1. Initialize MCP configuration: weave mcp --init
-# 2. Enable desired MCP servers in .weave/mcp.yaml
-# 3. Set required environment variables (e.g., GITHUB_TOKEN)
+# All MCP servers are configured directly in this file - no separate config needed!
+# Set required environment variables (e.g., GITHUB_TOKEN) before running.
 
+# MCP Server Configuration
+# Configure external tool providers that agents can use
+mcp_servers:
+  # Filesystem server for file operations
+  filesystem:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+    description: "File system operations (read, write, list)"
+    enabled: true
+
+  # Web server for fetching and scraping
+  web:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-fetch"
+    description: "Web fetching and scraping"
+    enabled: true
+
+  # GitHub server for repository operations
+  # Note: Disabled by default - requires GITHUB_TOKEN environment variable
+  # To enable: set enabled: true and export GITHUB_TOKEN=your_token
+  github:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-github"
+    description: "GitHub API integration (requires GITHUB_TOKEN)"
+    enabled: false
+
+  # Database server for SQL operations
+  database:
+    command: "npx"
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-sqlite"
+    description: "SQLite database operations"
+    enabled: true
+
+# Agent definitions
 agents:
   # File analyzer - uses filesystem MCP server
   file_analyzer:
