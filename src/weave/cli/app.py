@@ -11,6 +11,10 @@ from .. import __version__
 from ..core.exceptions import ConfigError, GraphError, WeaveError
 from ..core.graph import DependencyGraph
 from ..parser.config import load_config_from_path
+from ..plugins.manager import PluginManager
+from ..plugins.base import PluginCategory
+from ..resources.loader import ResourceLoader
+from ..resources.models import ResourceType
 from ..runtime.executor import MockExecutor
 from .output import WeaveOutput
 
@@ -312,6 +316,129 @@ def graph(
     except (ConfigError, GraphError, WeaveError) as e:
         output.print_error(e)
         raise typer.Exit(1)
+    except Exception as e:
+        output.print_error(e)
+        raise typer.Exit(1)
+
+
+@app.command()
+def plugins(
+    category: Optional[str] = typer.Option(
+        None, "--category", "-c", help="Filter by category"
+    ),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show detailed information"
+    ),
+) -> None:
+    """
+    List available plugins.
+
+    Shows all built-in and loaded plugins with their metadata.
+    """
+    try:
+        # Create plugin manager
+        manager = PluginManager(console=console)
+        manager.load_builtin_plugins()
+
+        # Filter by category if specified
+        plugin_category = None
+        if category:
+            try:
+                plugin_category = PluginCategory(category)
+            except ValueError:
+                valid_categories = ", ".join(c.value for c in PluginCategory)
+                console.print(
+                    f"[red]Invalid category: {category}[/red]\n"
+                    f"Valid categories: {valid_categories}"
+                )
+                raise typer.Exit(1)
+
+        # List plugins
+        manager.list_plugins(category=plugin_category, verbose=verbose)
+
+    except Exception as e:
+        output.print_error(e)
+        raise typer.Exit(1)
+
+
+@app.command()
+def resources(
+    type: Optional[str] = typer.Option(
+        None, "--type", "-t", help="Filter by resource type"
+    ),
+    path: Path = typer.Option(
+        ".weave", "--path", "-p", help="Resources directory path"
+    ),
+    create: bool = typer.Option(
+        False, "--create", help="Create default resource structure"
+    ),
+) -> None:
+    """
+    List and manage resources (prompts, skills, recipes, etc.).
+
+    Resources are loaded from the .weave/ directory by default.
+    """
+    try:
+        loader = ResourceLoader(base_path=path)
+
+        # Create structure if requested
+        if create:
+            loader.create_default_structure()
+            console.print(f"\n✨ [bold green]Created resource structure in {path}[/bold green]\n")
+            console.print("Created directories:")
+            console.print("  • prompts/     - System prompts")
+            console.print("  • skills/      - Agent skills")
+            console.print("  • recipes/     - Workflow recipes")
+            console.print("  • knowledge/   - Knowledge bases")
+            console.print("  • rules/       - Behavioral rules")
+            console.print("  • behaviors/   - Agent behaviors")
+            console.print("  • sub_agents/  - Sub-agent configurations\n")
+            console.print("[dim]Example files have been created in each directory.[/dim]\n")
+            return
+
+        # Load resources
+        loader.load_all()
+
+        # Filter by type if specified
+        resource_type = None
+        if type:
+            try:
+                resource_type = ResourceType(type)
+            except ValueError:
+                valid_types = ", ".join(rt.value for rt in ResourceType)
+                console.print(
+                    f"[red]Invalid type: {type}[/red]\n"
+                    f"Valid types: {valid_types}"
+                )
+                raise typer.Exit(1)
+
+        # Get resources
+        resources_dict = loader.list_resources(resource_type)
+
+        # Display
+        from rich.table import Table
+
+        table = Table(title="Available Resources", show_header=True, header_style="bold magenta")
+        table.add_column("Type", style="cyan")
+        table.add_column("Count", style="green")
+        table.add_column("Names", style="white")
+
+        for res_type, names in resources_dict.items():
+            if names:  # Only show types with resources
+                names_str = ", ".join(names) if len(names) <= 5 else f"{', '.join(names[:5])}, ..."
+                table.add_row(res_type, str(len(names)), names_str)
+
+        console.print("\n")
+        console.print(table)
+
+        # Summary
+        total = sum(len(names) for names in resources_dict.values())
+        console.print(f"\n[bold]Total resources:[/bold] {total}")
+        console.print(f"[dim]Location: {path}[/dim]\n")
+
+        if total == 0:
+            console.print("[yellow]No resources found. Use --create to initialize.[/yellow]\n")
+
     except Exception as e:
         output.print_error(e)
         raise typer.Exit(1)

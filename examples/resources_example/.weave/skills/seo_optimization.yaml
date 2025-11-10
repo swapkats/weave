@@ -1,0 +1,42 @@
+name: seo_optimization
+description: Optimize content for search engines
+instructions: |
+  Optimize content for search engine visibility:
+
+  1. Keyword Research
+     - Identify primary and secondary keywords
+     - Check keyword difficulty and search volume
+     - Find related terms and phrases
+
+  2. On-Page Optimization
+     - Include keywords in title, headings, and first paragraph
+     - Use keywords naturally throughout content
+     - Optimize meta descriptions
+     - Add alt text to images
+
+  3. Content Structure
+     - Use proper heading hierarchy (H1, H2, H3)
+     - Keep paragraphs short and scannable
+     - Include bullet points and numbered lists
+     - Add internal and external links
+
+  4. Technical SEO
+     - Ensure fast page load times
+     - Use semantic HTML
+     - Implement schema markup
+     - Make content mobile-friendly
+
+examples:
+  - "Optimize blog post for 'AI automation tools'"
+  - "Add SEO metadata to product page"
+  - "Improve content structure for better rankings"
+
+required_tools:
+  - web_search
+  - json_parser
+
+tags:
+  - seo
+  - optimization
+  - content
+  - marketing
