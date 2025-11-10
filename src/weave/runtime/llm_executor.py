@@ -52,6 +52,7 @@ class LLMExecutor:
         console: Optional[Console] = None,
         verbose: bool = False,
         config: Optional["WeaveConfig"] = None,
+        session: Optional["ConversationSession"] = None,
     ):
         """Initialize LLM executor.
 
@@ -59,10 +60,12 @@ class LLMExecutor:
             console: Rich console for output
             verbose: Enable verbose logging
             config: Weave configuration
+            session: Conversation session for history
         """
         self.console = console or Console()
         self.verbose = verbose
         self.config = config
+        self.session = session
 
         # Initialize API clients
         self._init_openai()
@@ -84,7 +87,7 @@ class LLMExecutor:
         if not api_key:
             if self.verbose:
                 self.console.print("[yellow]OPENAI_API_KEY not found in config or environment[/yellow]")
-                self.console.print("[dim]Set with: weave keys --set openai[/dim]")
+                self.console.print("[dim]Set with: export OPENAI_API_KEY='sk-...'[/dim]")
             self.openai_client = None
             return
 
@@ -106,7 +109,7 @@ class LLMExecutor:
         if not api_key:
             if self.verbose:
                 self.console.print("[yellow]ANTHROPIC_API_KEY not found in config or environment[/yellow]")
-                self.console.print("[dim]Set with: weave keys --set anthropic[/dim]")
+                self.console.print("[dim]Set with: export ANTHROPIC_API_KEY='sk-ant-...'[/dim]")
             self.anthropic_client = None
             return
 
@@ -142,6 +145,16 @@ class LLMExecutor:
             temperature = agent.llm_config.temperature
             max_tokens = agent.llm_config.max_tokens
 
+        # Add system prompt to session if present
+        if self.session:
+            # Only add system prompt on first message
+            if len(self.session.messages) == 0:
+                self.session.add_message("system", system_prompt)
+
+        # Add user prompt to session
+        if self.session:
+            self.session.add_message("user", user_prompt)
+
         # Determine provider from model name
         model = agent.model.lower()
 
@@ -165,6 +178,10 @@ class LLMExecutor:
             )
         else:
             raise ValueError(f"Unsupported model: {agent.model}")
+
+        # Save assistant response to session
+        if self.session and response.content:
+            self.session.add_message("assistant", response.content)
 
         response.execution_time = time.time() - start_time
         return response
@@ -229,10 +246,14 @@ class LLMExecutor:
         if not self.openai_client:
             raise RuntimeError("OpenAI client not initialized. Set OPENAI_API_KEY.")
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ]
+        # Use session history if available, otherwise build fresh messages
+        if self.session and len(self.session.messages) > 0:
+            messages = self.session.get_messages_for_llm()
+        else:
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ]
 
         kwargs = {
             "model": model,
@@ -299,13 +320,35 @@ class LLMExecutor:
         if not model.startswith("claude-"):
             model = f"claude-{model}"
 
-        kwargs = {
-            "model": model,
-            "system": system_prompt,
-            "messages": [{"role": "user", "content": user_prompt}],
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        }
+        # Use session history if available
+        if self.session and len(self.session.messages) > 0:
+            # Anthropic requires system prompt separate from messages
+            # Extract system message if present
+            session_messages = self.session.get_messages_for_llm()
+            system_msg = system_prompt
+            messages = []
+
+            for msg in session_messages:
+                if msg["role"] == "system":
+                    system_msg = msg["content"]
+                else:
+                    messages.append(msg)
+
+            kwargs = {
+                "model": model,
+                "system": system_msg,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
+        else:
+            kwargs = {
+                "model": model,
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": user_prompt}],
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
 
         # Add tools if provided (Anthropic format)
         if tools:
