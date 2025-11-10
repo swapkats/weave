@@ -82,9 +82,9 @@ class Executor:
                 agent_name=None,
             )
 
-        # Initialize LLM executor
+        # Initialize LLM executor with session
         self.llm_executor = LLMExecutor(
-            console=self.console, verbose=self.verbose, config=self.config
+            console=self.console, verbose=self.verbose, config=self.config, session=self.session
         )
 
         # Initialize systems
@@ -196,6 +196,10 @@ class Executor:
         """
         start_time = time.time()
 
+        # Update session with weave name if present
+        if self.session:
+            self.session.weave_name = weave_name
+
         # Get execution order
         execution_order = graph.get_execution_order()
 
@@ -215,6 +219,10 @@ class Executor:
         # Execute agents in order
         for agent_name in execution_order:
             agent = graph.config.agents[agent_name]
+
+            # Update session with current agent name
+            if self.session:
+                self.session.agent_name = agent_name
 
             try:
                 # Execute agent
