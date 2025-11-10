@@ -16,6 +16,8 @@ Weave allows you to define and compose AI agents using YAML configuration files 
 - 🎨 **Visualization** - ASCII and Mermaid graph generation
 - 🪝 **Extensible** - Hook system for custom execution (v2: real LLM calls)
 - 🧪 **Mock Execution** - Test workflows without API calls (v1)
+- 🔌 **Plugin System** - Built-in and custom plugins for extending agent capabilities
+- 📁 **Resource Management** - Organize prompts, skills, and knowledge bases in files
 
 ## 📦 Installation
 
@@ -235,6 +237,61 @@ weave graph --format mermaid
 weave graph --format mermaid --output pipeline.mmd
 ```
 
+#### `weave plugins`
+
+List and manage plugins for extending agent capabilities.
+
+**Options:**
+- `--category, -c` - Filter by category (data_collection, web, nlp, etc.)
+
+```bash
+weave plugins
+weave plugins --category web
+```
+
+Built-in plugins include:
+- **web_search** - Search the web for information
+- **summarizer** - Summarize text content
+- **data_cleaner** - Clean and normalize data
+- **json_parser** - Parse and validate JSON
+- **markdown_formatter** - Format content as Markdown
+
+See [Plugins Guide](docs/guides/plugins.md) for creating custom plugins.
+
+#### `weave resources`
+
+List and manage agent resources (prompts, skills, knowledge bases).
+
+**Options:**
+- `--type, -t` - Filter by type (prompt, skill, recipe, knowledge, rule, behavior, sub_agent)
+- `--path, -p` - Resource directory path (default: .weave)
+- `--create` - Create example resource structure
+
+```bash
+# List all resources
+weave resources
+
+# Filter by type
+weave resources --type skill
+
+# Create example structure
+weave resources --create
+```
+
+Resources are organized in `.weave/` directory:
+```
+.weave/
+├── prompts/         # System prompts with YAML frontmatter
+├── skills/          # Agent skills (YAML)
+├── recipes/         # Workflow templates
+├── knowledge/       # Knowledge bases (Markdown, text)
+├── rules/           # Agent constraints
+├── behaviors/       # Behavioral guidelines
+└── sub_agents/      # Nested agent configurations
+```
+
+See [Resources Guide](docs/guides/resources.md) for details.
+
 ### Configuration
 
 #### Agent Definition
@@ -316,6 +373,8 @@ See the `examples/` directory for complete examples:
 - **[basic.weave.yaml](examples/basic.weave.yaml)** - Simple two-agent pipeline
 - **[research-pipeline.weave.yaml](examples/research-pipeline.weave.yaml)** - Multi-stage research workflow
 - **[data-processing.weave.yaml](examples/data-processing.weave.yaml)** - ETL-style data pipeline
+- **[custom_plugin_example.py](examples/custom_plugin_example.py)** - Creating custom plugins
+- **[resources_example/](examples/resources_example/)** - Complete resources system demo
 
 ## 🏗️ Architecture
 
@@ -347,6 +406,8 @@ See the `examples/` directory for complete examples:
 - **Parser** (`src/weave/parser/`) - YAML parsing and env substitution
 - **Core** (`src/weave/core/`) - Pydantic models and dependency graph
 - **Runtime** (`src/weave/runtime/`) - Execution engine with hooks
+- **Plugins** (`src/weave/plugins/`) - Plugin system with built-in and custom plugins
+- **Resources** (`src/weave/resources/`) - File-based resource loading for prompts, skills, etc.
 
 ## 🔮 Roadmap
 
@@ -356,20 +417,23 @@ See the `examples/` directory for complete examples:
 - ✅ Mock execution engine
 - ✅ CLI with plan/apply/graph commands
 - ✅ ASCII and Mermaid visualization
+- ✅ Plugin system with built-in and custom plugins
+- ✅ Resource management for prompts, skills, and knowledge bases
 
 ### v2.0 (Planned)
 - 🔄 Real LLM execution via APIs
 - 🔄 Multiple provider support (OpenAI, Anthropic, etc.)
 - 🔄 State management and drift detection
 - 🔄 Parallel execution support
+- 🔄 Resource loading integration (@prompts/, @skills/ syntax)
 - 🔄 Agent module registry
 
 ### v3.0 (Future)
 - 📦 Remote module system
-- 🔌 Plugin architecture
 - 🌐 Web UI dashboard
 - 📊 Execution analytics
 - 🔐 Secret management
+- 🔄 Advanced plugin marketplace
 
 ## 🤝 Contributing
 
