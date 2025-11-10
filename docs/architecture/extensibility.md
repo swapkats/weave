@@ -6,8 +6,8 @@ How to extend Weave with custom functionality using hooks and plugins.
 
 Weave provides multiple extension points:
 
-1. **Executor Hooks** - Intercept agent execution
-2. **Custom Validators** - Add validation logic (planned)
+1. **Executor Hooks** - Intercept agent execution ✅ **IMPLEMENTED**
+2. **Custom Validators** - Add validation logic (planned v2.0)
 3. **Plugin System** - Add tools and capabilities (planned v2.0)
 
 ---
@@ -27,21 +27,28 @@ Hooks allow you to run custom code before and after agent execution.
 
 ### Hook Protocol
 
+Hooks use an async protocol to integrate with Weave's asynchronous execution:
+
 ```python
 from weave.runtime.hooks import ExecutorHook
 from weave.core.models import Agent
+from typing import Any
 
-class MyHook(ExecutorHook):
-    def before_agent(self, agent: Agent) -> None:
+class MyHook:
+    """Custom hook example."""
+
+    async def before_agent(self, agent: Agent) -> None:
         """Called before agent starts executing."""
         # Your code here
-        pass
+        print(f"Starting {agent.name}")
 
-    def after_agent(self, agent: Agent, output: Any) -> None:
+    async def after_agent(self, agent: Agent, output: Any) -> None:
         """Called after agent completes execution."""
         # Your code here
-        pass
+        print(f"Completed {agent.name}")
 ```
+
+**Note**: Hooks can be synchronous or asynchronous. Use `async def` if you need to perform async operations (like database calls or API requests).
 
 ### Built-in Hooks
 
@@ -50,13 +57,23 @@ class MyHook(ExecutorHook):
 Logs agent execution to a file:
 
 ```python
+from weave.runtime import Executor
 from weave.runtime.hooks import LoggingHook
+from weave.parser import load_config_from_path
+from weave.core.graph import DependencyGraph
 
-# Create hook
-logger = LoggingHook("weave.log")
+# Load config and build graph
+config = load_config_from_path(".weave.yaml")
+graph = DependencyGraph(config)
+graph.build("my_weave")
 
-# Register with executor
-executor.register_hook(logger)
+# Create executor and register hook
+executor = Executor(config=config)
+executor.register_hook(LoggingHook("weave.log"))
+
+# Execute workflow
+import asyncio
+summary = asyncio.run(executor.execute_flow(graph, "my_weave"))
 ```
 
 **Output in `weave.log`:**
@@ -74,33 +91,43 @@ executor.register_hook(logger)
 ```python
 import time
 from typing import Dict, Any
-from weave.runtime.hooks import ExecutorHook
 
-class MetricsHook(ExecutorHook):
+class MetricsHook:
+    """Collect execution metrics for all agents."""
+
     def __init__(self):
         self.metrics: Dict[str, Any] = {}
 
-    def before_agent(self, agent: Agent) -> None:
+    async def before_agent(self, agent) -> None:
+        """Record agent start time."""
         self.metrics[agent.name] = {
             "start_time": time.time(),
             "model": agent.model,
         }
 
-    def after_agent(self, agent: Agent, output: Any) -> None:
+    async def after_agent(self, agent, output: Any) -> None:
+        """Record agent completion and calculate duration."""
         metrics = self.metrics[agent.name]
         metrics["end_time"] = time.time()
         metrics["duration"] = metrics["end_time"] - metrics["start_time"]
-        metrics["status"] = output.status
-        metrics["tokens"] = output.tokens_used
+        metrics["status"] = output.status if hasattr(output, "status") else "unknown"
+        metrics["tokens"] = output.tokens_used if hasattr(output, "tokens_used") else 0
 
     def report(self) -> Dict[str, Any]:
         """Get collected metrics."""
         return self.metrics
 
+
 # Usage
+from weave.runtime import Executor
+
 metrics = MetricsHook()
+executor = Executor(config=config)
 executor.register_hook(metrics)
-executor.execute_flow(graph, "my_weave")
+
+# Execute
+import asyncio
+asyncio.run(executor.execute_flow(graph, "my_weave"))
 
 # Print report
 import json
@@ -112,12 +139,15 @@ print(json.dumps(metrics.report(), indent=2))
 ```python
 import sqlite3
 from datetime import datetime
-from weave.runtime.hooks import ExecutorHook
 
-class DatabaseHook(ExecutorHook):
+class DatabaseHook:
+    """Log agent execution to SQLite database."""
+
     def __init__(self, db_path: str):
+        self.db_path = db_path
         self.conn = sqlite3.connect(db_path)
         self._init_db()
+        self.start_times = {}
 
     def _init_db(self):
         self.conn.execute("""
@@ -132,12 +162,15 @@ class DatabaseHook(ExecutorHook):
             )
         """)
 
-    def before_agent(self, agent: Agent) -> None:
-        self.start_time = datetime.now()
+    async def before_agent(self, agent) -> None:
+        """Record start time."""
+        self.start_times[agent.name] = datetime.now()
 
-    def after_agent(self, agent: Agent, output: Any) -> None:
+    async def after_agent(self, agent, output) -> None:
+        """Insert execution record into database."""
+        start_time = self.start_times.get(agent.name, datetime.now())
         end_time = datetime.now()
-        duration = (end_time - self.start_time).total_seconds()
+        duration = (end_time - start_time).total_seconds()
 
         self.conn.execute("""
             INSERT INTO agent_runs
@@ -146,65 +179,84 @@ class DatabaseHook(ExecutorHook):
         """, (
             agent.name,
             agent.model,
-            output.status,
-            self.start_time.isoformat(),
+            output.status if hasattr(output, "status") else "unknown",
+            start_time.isoformat(),
             end_time.isoformat(),
             duration
         ))
         self.conn.commit()
 
+
 # Usage
+from weave.runtime import Executor
+
 db_logger = DatabaseHook("weave_runs.db")
+executor = Executor(config=config)
 executor.register_hook(db_logger)
 ```
 
 #### Webhook Notification Hook
 
 ```python
-import requests
-from weave.runtime.hooks import ExecutorHook
+import httpx  # Use httpx for async HTTP requests
 
-class WebhookHook(ExecutorHook):
+class WebhookHook:
+    """Send webhook notifications on agent execution."""
+
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
+        self.client = httpx.AsyncClient()
 
-    def before_agent(self, agent: Agent) -> None:
-        requests.post(self.webhook_url, json={
+    async def before_agent(self, agent) -> None:
+        """Send agent_start notification."""
+        await self.client.post(self.webhook_url, json={
             "event": "agent_start",
             "agent": agent.name,
             "model": agent.model,
         })
 
-    def after_agent(self, agent: Agent, output: Any) -> None:
-        requests.post(self.webhook_url, json={
+    async def after_agent(self, agent, output) -> None:
+        """Send agent_complete notification."""
+        await self.client.post(self.webhook_url, json={
             "event": "agent_complete",
             "agent": agent.name,
-            "status": output.status,
-            "duration": output.execution_time,
+            "status": output.status if hasattr(output, "status") else "unknown",
+            "duration": output.execution_time if hasattr(output, "execution_time") else 0,
         })
 
+
 # Usage
+from weave.runtime import Executor
+
 webhook = WebhookHook("https://your-app.com/webhooks/weave")
+executor = Executor(config=config)
 executor.register_hook(webhook)
 ```
 
+**Note**: Install `httpx` for async HTTP requests: `pip install httpx`
+
 ### Multiple Hooks
 
-Register multiple hooks:
+Register multiple hooks to combine different behaviors:
 
 ```python
-executor = MockExecutor()
+from weave.runtime import Executor
+from weave.runtime.hooks import LoggingHook
 
-# Add multiple hooks
+# Create executor
+executor = Executor(config=config)
+
+# Add multiple hooks - they'll be called in registration order
 executor.register_hook(LoggingHook("weave.log"))
 executor.register_hook(MetricsHook())
 executor.register_hook(WebhookHook("https://..."))
 
-# All hooks will be called
-executor.execute_flow(graph, "my_weave")
+# All hooks will be called for each agent
+import asyncio
+summary = asyncio.run(executor.execute_flow(graph, "my_weave"))
 ```
 
-Hooks are called in registration order.
+**Important**: Hooks are called in registration order. Each hook's `before_agent()` is called before execution, and `after_agent()` is called after, even if a previous hook fails.
 
 ---
 
@@ -302,18 +354,22 @@ agents:
 ```python
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from weave.runtime import MockExecutor
+from weave.runtime import Executor
 from weave.parser import load_config_from_path
 from weave.core.graph import DependencyGraph
+import asyncio
 
 def run_weave():
+    """Run Weave workflow in Airflow."""
     config = load_config_from_path(".weave.yaml")
     graph = DependencyGraph(config)
     graph.build("my_weave")
     graph.validate()
 
-    executor = MockExecutor()
-    summary = executor.execute_flow(graph, "my_weave")
+    executor = Executor(config=config)
+
+    # Run async execution in sync context
+    summary = asyncio.run(executor.execute_flow(graph, "my_weave"))
 
     if summary.failed > 0:
         raise Exception(f"{summary.failed} agents failed")
@@ -331,20 +387,24 @@ task = PythonOperator(
 
 ```python
 from fastapi import FastAPI
-from weave.runtime import MockExecutor
-from weave.parser import load_config
+from weave.runtime import Executor
+from weave.parser import load_config_from_path
+from weave.core.graph import DependencyGraph
 
 app = FastAPI()
 
 @app.post("/execute/{weave_name}")
 async def execute_weave(weave_name: str):
+    """Execute a Weave workflow via REST API."""
     config = load_config_from_path("config.yaml")
     graph = DependencyGraph(config)
     graph.build(weave_name)
     graph.validate()
 
-    executor = MockExecutor()
-    summary = executor.execute_flow(graph, weave_name)
+    executor = Executor(config=config)
+
+    # FastAPI routes are already async, so we can await directly
+    summary = await executor.execute_flow(graph, weave_name)
 
     return {
         "weave": weave_name,
@@ -359,23 +419,32 @@ async def execute_weave(weave_name: str):
 
 ```python
 from celery import Celery
-from weave.runtime import MockExecutor
+from weave.runtime import Executor
+from weave.parser import load_config_from_path
+from weave.core.graph import DependencyGraph
+import asyncio
 
 app = Celery('weave_tasks')
 
 @app.task
 def execute_weave_async(weave_name: str):
+    """Execute Weave workflow as background task."""
     config = load_config_from_path("config.yaml")
     graph = DependencyGraph(config)
     graph.build(weave_name)
     graph.validate()
 
-    executor = MockExecutor()
-    summary = executor.execute_flow(graph, weave_name)
+    executor = Executor(config=config)
+
+    # Celery tasks are synchronous, so use asyncio.run()
+    summary = asyncio.run(executor.execute_flow(graph, weave_name))
 
     return {
         "weave": weave_name,
         "status": "success" if summary.failed == 0 else "failed",
+        "total_agents": summary.total_agents,
+        "successful": summary.successful,
+        "failed": summary.failed,
     }
 
 # Usage
@@ -386,19 +455,22 @@ result = execute_weave_async.delay("my_pipeline")
 
 ## Future Extension Points
 
-### v2.0
+See [ROADMAP.md](/docs/ROADMAP.md) for the complete feature roadmap.
 
-- **Real Executors** - Implement for different LLM providers
-- **State Managers** - Custom state persistence
-- **Output Formatters** - Custom output formats
-- **Tool Plugins** - Community-contributed tools
+### Planned for v2.0
 
-### v3.0
+- **Custom Validators** - Add validation logic to configs
+- **Plugin System** - Community-contributed plugins for tools and capabilities
+- **State Managers** - Custom state persistence backends
+- **Output Formatters** - Custom output formats and exporters
+- **Deployment Providers** - Cloud deployment to AWS, GCP, Azure, Kubernetes
+
+### Planned for v3.0
 
 - **Agent Types** - Custom agent implementations
-- **Execution Strategies** - Custom execution logic
-- **UI Plugins** - Dashboard extensions
-- **Provider Plugins** - New LLM providers
+- **Execution Strategies** - Custom execution logic (parallel, distributed, etc.)
+- **UI Plugins** - Dashboard and visualization extensions
+- **Provider Plugins** - Support for new LLM providers
 
 ---
 

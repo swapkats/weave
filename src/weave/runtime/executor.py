@@ -13,21 +13,31 @@ from ..core.graph import DependencyGraph
 from ..core.models import Agent, WeaveConfig
 from ..core.memory import MemoryManager
 from .llm_executor import LLMExecutor
+from .hooks import ExecutorHook
 
 
 @dataclass
 class AgentOutput:
     """Output from an agent execution."""
     agent_name: str
-    output: Any
+    output_key: str
+    data: Any
     execution_time: float
+    status: str = "success"
     tokens_used: int = 0
     metadata: Dict[str, Any] = None
+
+    # Backward compatibility
+    @property
+    def output(self) -> Any:
+        """Alias for data field."""
+        return self.data
 
 
 @dataclass
 class ExecutionSummary:
     """Summary of workflow execution."""
+    weave_name: str
     total_agents: int
     successful: int
     failed: int
@@ -71,6 +81,9 @@ class Executor:
         self.outputs: Dict[str, AgentOutput] = {}
         self.run_id = str(uuid.uuid4())[:8]
 
+        # Hook management
+        self.hooks: List[ExecutorHook] = []
+
         # Session management
         self.session = session
         self.session_id = session_id
@@ -101,6 +114,35 @@ class Executor:
         self._initialize_plugins()
         self._initialize_state_management()
         self._initialize_storage()
+
+    def register_hook(self, hook: ExecutorHook) -> None:
+        """
+        Register a hook to be called during agent execution.
+
+        Hooks are called before and after each agent execution, allowing
+        custom logging, metrics collection, notifications, and more.
+
+        Args:
+            hook: Hook instance implementing ExecutorHook protocol
+
+        Example:
+            executor = Executor()
+            executor.register_hook(LoggingHook("weave.log"))
+            executor.register_hook(MetricsHook())
+        """
+        if not isinstance(hook, ExecutorHook):
+            # Try to verify it at least has the right methods
+            if not (hasattr(hook, "before_agent") and hasattr(hook, "after_agent")):
+                raise TypeError(
+                    f"Hook must implement ExecutorHook protocol with "
+                    f"before_agent() and after_agent() methods. Got: {type(hook)}"
+                )
+
+        self.hooks.append(hook)
+        if self.verbose:
+            self.console.print(
+                f"[dim]Registered hook: {type(hook).__name__}[/dim]"
+            )
 
     def _initialize_resources(self) -> None:
         """Initialize resource loader for agent resources."""
@@ -363,10 +405,13 @@ class Executor:
         """Execute a single agent."""
         start_time = time.time()
 
+        # Call before_agent hooks
+        await self._call_before_hooks(agent)
+
         if dry_run:
             # Dry run: just validate
             await asyncio.sleep(0.1)  # Simulate work
-            return AgentOutput(
+            output = AgentOutput(
                 agent_name=agent_name,
                 output_key=agent.outputs or agent_name,
                 data={"status": "dry-run", "note": "Would execute in real mode"},
@@ -374,6 +419,11 @@ class Executor:
                 status="success",
                 tokens_used=0,
             )
+
+            # Call after_agent hooks
+            await self._call_after_hooks(agent, output)
+
+            return output
 
         # Setup memory manager for this agent if configured
         memory_manager = None
@@ -426,7 +476,7 @@ class Executor:
 
             execution_time = time.time() - start_time
 
-            return AgentOutput(
+            output = AgentOutput(
                 agent_name=agent_name,
                 output_key=agent.outputs or agent_name,
                 data={
@@ -438,6 +488,11 @@ class Executor:
                 status="success",
                 tokens_used=final_response.tokens_used,
             )
+
+            # Call after_agent hooks
+            await self._call_after_hooks(agent, output)
+
+            return output
 
         except Exception as e:
             execution_time = time.time() - start_time
@@ -485,6 +540,42 @@ class Executor:
         # For now, plugins don't modify the response
         # In future, plugins could post-process LLM outputs
         return llm_response
+
+    async def _call_before_hooks(self, agent: Agent) -> None:
+        """
+        Call before_agent hooks with error handling.
+
+        Hooks are called in registration order. If a hook raises an exception,
+        it is logged but does not stop execution.
+        """
+        for hook in self.hooks:
+            try:
+                await hook.before_agent(agent)
+            except Exception as e:
+                # Log hook errors but don't fail execution
+                if self.verbose:
+                    self.console.print(
+                        f"[yellow]Hook {type(hook).__name__}.before_agent() "
+                        f"failed: {e}[/yellow]"
+                    )
+
+    async def _call_after_hooks(self, agent: Agent, output: AgentOutput) -> None:
+        """
+        Call after_agent hooks with error handling.
+
+        Hooks are called in registration order. If a hook raises an exception,
+        it is logged but does not stop execution.
+        """
+        for hook in self.hooks:
+            try:
+                await hook.after_agent(agent, output)
+            except Exception as e:
+                # Log hook errors but don't fail execution
+                if self.verbose:
+                    self.console.print(
+                        f"[yellow]Hook {type(hook).__name__}.after_agent() "
+                        f"failed: {e}[/yellow]"
+                    )
 
     async def _create_execution_state(
         self, weave_name: str, agents: List[str]
