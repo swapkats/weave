@@ -113,6 +113,13 @@ class Agent(BaseModel):
     inputs: Optional[str] = None  # Reference to another agent
     outputs: Optional[str] = None  # Output key name
     prompt: Optional[str] = None  # Agent-specific prompt/instructions
+
+    # Resource references (loaded from .weave/ directory)
+    skills: List[str] = Field(default_factory=list)  # References to skill resources
+    knowledge: List[str] = Field(default_factory=list)  # References to knowledge base resources
+    rules: List[str] = Field(default_factory=list)  # References to rule resources
+    behaviors: List[str] = Field(default_factory=list)  # References to behavior resources
+
     config: Dict[str, Any] = Field(default_factory=dict)  # Backward compatibility
 
     @property

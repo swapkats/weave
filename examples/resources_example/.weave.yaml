@@ -16,12 +16,12 @@ agents:
   writer:
     model: "claude-3-opus"
     # Load system prompt from file
-    # prompt: "@prompts/content_writer"
+    prompt: "@prompts/content_writer"
     inputs: "researcher"
     tools:
       - markdown_formatter
     # Load knowledge base for brand voice
-    # knowledge: ["@knowledge/brand_voice"]
+    knowledge: ["@knowledge/brand_voice"]
     outputs: "draft_content"
 
   # SEO optimizer - uses skills
@@ -29,7 +29,7 @@ agents:
     model: "gpt-4"
     inputs: "writer"
     # Load skills from file
-    # skills: ["@skills/seo_optimization"]
+    skills: ["@skills/seo_optimization"]
     tools:
       - web_search
       - json_parser
@@ -42,12 +42,3 @@ weaves:
       - researcher
       - writer
       - seo_specialist
-
-# Note: Resource loading (@prompts/, @skills/, @knowledge/)
-# will be implemented in the agent configuration system in v2.0
-# For now, resources can be loaded programmatically:
-#
-# from weave.resources import ResourceLoader
-# loader = ResourceLoader()
-# loader.load_all()
-# prompt = loader.get_resource(ResourceType.SYSTEM_PROMPT, "content_writer")

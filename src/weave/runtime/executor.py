@@ -83,9 +83,16 @@ class Executor:
                 agent_name=None,
             )
 
+        # Initialize resource loader
+        self._initialize_resources()
+
         # Initialize LLM executor with session (memory manager will be set per agent)
         self.llm_executor = LLMExecutor(
-            console=self.console, verbose=self.verbose, config=self.config, session=self.session
+            console=self.console,
+            verbose=self.verbose,
+            config=self.config,
+            session=self.session,
+            resource_loader=self.resource_loader,
         )
         self.memory_managers: Dict[str, MemoryManager] = {}
 
@@ -94,6 +101,32 @@ class Executor:
         self._initialize_plugins()
         self._initialize_state_management()
         self._initialize_storage()
+
+    def _initialize_resources(self) -> None:
+        """Initialize resource loader for agent resources."""
+        try:
+            from ..resources.loader import ResourceLoader
+            from pathlib import Path
+
+            # Use .weave/ directory in current working directory
+            base_path = Path(".weave")
+            self.resource_loader = ResourceLoader(base_path)
+
+            # Load all resources if .weave directory exists
+            if base_path.exists():
+                self.resource_loader.load_all()
+                if self.verbose:
+                    resources = self.resource_loader.list_resources()
+                    total = sum(len(r) for r in resources.values())
+                    self.console.print(f"[dim]Loaded {total} resources[/dim]")
+            else:
+                if self.verbose:
+                    self.console.print("[dim]No .weave/ directory found, resources disabled[/dim]")
+
+        except ImportError as e:
+            if self.verbose:
+                self.console.print(f"[yellow]Resource system not available: {e}[/yellow]")
+            self.resource_loader = None
 
     def _initialize_tools(self) -> None:
         """Initialize tool executor with custom tools and MCP."""

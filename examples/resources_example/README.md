@@ -1,116 +1,71 @@
 # Resources Example
 
-This example demonstrates Weave's resource management system for organizing agent prompts, skills, and knowledge bases.
+This example demonstrates how to use the Weave resources system to organize and reuse prompts, skills, and knowledge bases.
 
-## Structure
+## Directory Structure
 
 ```
-resources_example/
-├── .weave/                    # Resources directory
-│   ├── prompts/               # System prompts
-│   │   └── content_writer.md
-│   ├── skills/                # Agent skills
-│   │   └── seo_optimization.yaml
-│   └── knowledge/             # Knowledge bases
-│       └── brand_voice.md
-├── .weave.yaml                # Main configuration
-└── README.md
+.weave/
+├── prompts/          # System prompts for agents
+│   └── content_writer.md
+├── skills/           # Reusable skills
+│   └── seo_optimization.yaml
+├── knowledge/        # Knowledge bases
+│   └── brand_voice.md
+├── rules/            # Business rules
+├── behaviors/        # Agent behaviors
+└── memory/          # Agent memory storage
 ```
 
-## Features Demonstrated
+## Resource Types
 
-1. **System Prompts** - Markdown files with YAML frontmatter
-2. **Skills** - YAML definitions of agent capabilities
-3. **Knowledge Bases** - Reference documentation for agents
+### System Prompts (`@prompts/`)
+Define agent instructions and personality. Can include:
+- Markdown files with frontmatter for metadata
+- Variable substitution with `{{variable}}`
+- Tags and descriptions
 
-## Usage
-
-### Initialize Resources
-
-```bash
-# Create default structure
-weave resources --create
-
-# List available resources
-weave resources
-
-# Filter by type
-weave resources --type skill
-```
-
-### Run the Pipeline
-
-```bash
-# Preview execution plan
-weave plan
-
-# Execute the workflow
-weave apply
-```
-
-## Resource Files
-
-### System Prompt
-`.weave/prompts/content_writer.md` - Professional content writing instructions with:
-- Role definition
-- Writing guidelines
-- Quality standards
-- Variable substitution support
-
-### Skill
-`.weave/skills/seo_optimization.yaml` - SEO optimization capability with:
+### Skills (`@skills/`)
+Reusable capability definitions that include:
 - Step-by-step instructions
-- Examples
+- Examples of usage
 - Required tools
-- Tags for organization
+- Tags for categorization
 
-### Knowledge Base
-`.weave/knowledge/brand_voice.md` - Brand voice guidelines including:
-- Personality traits
-- Writing style rules
-- Examples of good/bad content
-- Approved/avoided terminology
+### Knowledge Bases (`@knowledge/`)
+Reference information for agents:
+- Company information
+- Brand guidelines
+- Product documentation
+- Domain knowledge
 
-## Loading Resources Programmatically
+## Usage in Config
 
-```python
-from weave.resources import ResourceLoader, ResourceType
+Reference resources using the `@type/name` syntax:
 
-# Create loader
-loader = ResourceLoader(base_path=".weave")
+```yaml
+agents:
+  writer:
+    model: "gpt-4"
+    prompt: "@prompts/content_writer"         # Load system prompt
+    skills: ["@skills/seo_optimization"]      # Load skills
+    knowledge: ["@knowledge/brand_voice"]     # Load knowledge base
+```
 
-# Load all resources
-loader.load_all()
+## Running the Example
 
-# Access specific resources
-prompt = loader.get_resource(ResourceType.SYSTEM_PROMPT, "content_writer")
-skill = loader.get_resource(ResourceType.SKILL, "seo_optimization")
-kb = loader.get_resource(ResourceType.KNOWLEDGE_BASE, "brand_voice")
+```bash
+# From the examples/resources_example directory
+weave run content_pipeline
 
-# Use in your agents
-print(f"Prompt: {prompt.name}")
-print(f"Content: {prompt.content}")
-print(f"Variables: {prompt.variables}")
-
-print(f"\nSkill: {skill.name}")
-print(f"Instructions: {skill.instructions}")
-
-print(f"\nKnowledge: {kb.name}")
-print(f"Format: {kb.format}")
+# Or with dry-run to see the flow
+weave run content_pipeline --dry-run
 ```
 
 ## Benefits
 
-1. **Version Control** - Track changes to prompts and configurations
-2. **Reusability** - Share resources across projects
-3. **Organization** - Structured file system for agent resources
-4. **Collaboration** - Easy for teams to contribute and update
-5. **Testing** - Test prompts and skills independently
-
-## Next Steps
-
-- Add more prompts for different writing styles
-- Create additional skills for various tasks
-- Expand knowledge bases with domain expertise
-- Implement behaviors and rules for agent constraints
-- Define sub-agents for specialized tasks
+1. **Reusability**: Define prompts and skills once, use across multiple agents
+2. **Maintainability**: Update prompts in one place
+3. **Organization**: Keep configuration clean and focused
+4. **Version Control**: Track changes to prompts and knowledge bases
+5. **Collaboration**: Share resources across team members
