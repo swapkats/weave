@@ -916,63 +916,36 @@ def inspect(
 
 @app.command()
 def run(
-    agent: Optional[str] = typer.Option(
-        None, "--agent", "-a", help="Agent name from config to chat with"
-    ),
-    model: str = typer.Option(
-        "gpt-4", "--model", "-m", help="Model to use if no agent specified"
-    ),
+    agent: str = typer.Argument(..., help="Agent name from config"),
     config: Path = typer.Option(
         ".weave.yaml", "--config", "-c", help="Path to config file"
-    ),
-    verbose: bool = typer.Option(
-        False, "--verbose", "-v", help="Verbose output"
     ),
 ) -> None:
     """
     Run an interactive agentic chat session.
 
-    Start a conversational interface with an AI agent. You can specify
-    an agent from your config or use a default model.
+    Start a conversational interface with an AI agent from your config.
     """
     try:
         import asyncio
         from ..runtime.llm_executor import LLMExecutor
         from ..core.sessions import ConversationSession
-        from ..core.models import Agent, ModelConfig
         import uuid
 
         console.print("\n[bold cyan]🤖 Weave Agentic Chat[/bold cyan]")
         console.print("[dim]Type 'exit' or 'quit' to end the session[/dim]\n")
 
-        # Load config if agent specified
-        weave_config = None
-        agent_obj = None
+        # Load config and agent
+        weave_config = load_config_from_path(config)
+        if agent not in weave_config.agents:
+            available = ", ".join(weave_config.agents.keys())
+            console.print(f"[red]Agent '{agent}' not found.[/red]")
+            console.print(f"[dim]Available agents: {available}[/dim]\n")
+            raise typer.Exit(1)
 
-        if agent:
-            try:
-                weave_config = load_config_from_path(config)
-                if agent not in weave_config.agents:
-                    available = ", ".join(weave_config.agents.keys())
-                    console.print(f"[red]Agent '{agent}' not found.[/red]")
-                    console.print(f"[dim]Available agents: {available}[/dim]\n")
-                    raise typer.Exit(1)
-                agent_obj = weave_config.agents[agent]
-                console.print(f"[green]Using agent:[/green] {agent}")
-                console.print(f"[dim]Model: {agent_obj.model}[/dim]\n")
-            except Exception as e:
-                console.print(f"[yellow]Could not load config: {e}[/yellow]")
-                console.print("[dim]Using default model instead[/dim]\n")
-
-        # Create default agent if none specified
-        if not agent_obj:
-            console.print(f"[green]Using model:[/green] {model}\n")
-            agent_obj = Agent(
-                name="chat",
-                model=model,
-                prompt="You are a helpful AI assistant. Provide concise, accurate responses.",
-                llm_config=ModelConfig(temperature=0.7, max_tokens=2000)
-            )
+        agent_obj = weave_config.agents[agent]
+        console.print(f"[green]Using agent:[/green] {agent}")
+        console.print(f"[dim]Model: {agent_obj.model}[/dim]\n")
 
         # Create session
         session_id = str(uuid.uuid4())[:8]
@@ -985,7 +958,7 @@ def run(
         # Initialize executor
         executor = LLMExecutor(
             console=console,
-            verbose=verbose,
+            verbose=False,
             config=weave_config,
             session=session
         )
@@ -1011,17 +984,11 @@ def run(
                     # Display response
                     console.print(f"\n[bold green]Assistant:[/bold green] {response.content}")
 
-                    if verbose:
-                        console.print(f"\n[dim]Tokens: {response.tokens_used}, Time: {response.execution_time:.2f}s[/dim]")
-
                 except KeyboardInterrupt:
                     console.print("\n\n[dim]Goodbye! 👋[/dim]\n")
                     break
                 except Exception as e:
                     console.print(f"\n[red]Error:[/red] {e}\n")
-                    if verbose:
-                        import traceback
-                        console.print(f"[dim]{traceback.format_exc()}[/dim]")
 
         asyncio.run(chat_loop())
 
