@@ -34,7 +34,11 @@ class OpenRouterPlugin(Plugin):
         """Initialize OpenRouter plugin with API configuration."""
         super().__init__(config)
 
-        self.api_key = self.config.get("api_key") or os.getenv("OPENROUTER_API_KEY")
+        # Try API key manager first, then config, then environment variable
+        from ...core.api_keys import get_key_manager
+        manager = get_key_manager()
+        self.api_key = self.config.get("api_key") or manager.get_key("openrouter")
+
         self.api_base = self.config.get("api_base", "https://openrouter.ai/api/v1")
         self.default_model = self.config.get("default_model", "openai/gpt-3.5-turbo")
         self.site_url = self.config.get("site_url", "")
@@ -45,8 +49,8 @@ class OpenRouterPlugin(Plugin):
 
         if not self.api_key:
             raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY or provide 'api_key'. "
-                "Get your key at: https://openrouter.ai/keys"
+                "OpenRouter API key required. Set with 'weave keys --set openrouter' "
+                "or provide 'api_key' in config. Get your key at: https://openrouter.ai/keys"
             )
 
     def execute(self, input_data: Any, context: Optional[Dict[str, Any]] = None) -> Any:

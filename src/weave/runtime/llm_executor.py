@@ -76,10 +76,15 @@ class LLMExecutor:
             self.openai_client = None
             return
 
-        api_key = os.getenv("OPENAI_API_KEY")
+        # Try API key manager first, then fall back to environment variable
+        from ..core.api_keys import get_key_manager
+        manager = get_key_manager()
+        api_key = manager.get_key("openai")
+
         if not api_key:
             if self.verbose:
-                self.console.print("[yellow]OPENAI_API_KEY not set[/yellow]")
+                self.console.print("[yellow]OPENAI_API_KEY not found in config or environment[/yellow]")
+                self.console.print("[dim]Set with: weave keys --set openai[/dim]")
             self.openai_client = None
             return
 
@@ -93,10 +98,15 @@ class LLMExecutor:
             self.anthropic_client = None
             return
 
-        api_key = os.getenv("ANTHROPIC_API_KEY")
+        # Try API key manager first, then fall back to environment variable
+        from ..core.api_keys import get_key_manager
+        manager = get_key_manager()
+        api_key = manager.get_key("anthropic")
+
         if not api_key:
             if self.verbose:
-                self.console.print("[yellow]ANTHROPIC_API_KEY not set[/yellow]")
+                self.console.print("[yellow]ANTHROPIC_API_KEY not found in config or environment[/yellow]")
+                self.console.print("[dim]Set with: weave keys --set anthropic[/dim]")
             self.anthropic_client = None
             return
 
