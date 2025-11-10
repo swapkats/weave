@@ -13,7 +13,9 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO_URL="https://github.com/weave/weave-cli.git"
+GITHUB_REPO="weave/weave-cli"
+BRANCH="main"
+DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/${BRANCH}.zip"
 INSTALL_DIR="${HOME}/.weave-cli"
 PYTHON_MIN_VERSION="3.9"
 
@@ -71,17 +73,21 @@ check_python() {
     fi
 }
 
-# Check Git
-check_git() {
-    print_info "Checking Git installation..."
+# Check curl or wget
+check_downloader() {
+    print_info "Checking download tools..."
 
-    if ! command_exists git; then
-        print_error "Git is not installed"
-        print_info "Please install Git first"
+    if command_exists curl; then
+        DOWNLOADER="curl"
+        print_success "curl is available"
+    elif command_exists wget; then
+        DOWNLOADER="wget"
+        print_success "wget is available"
+    else
+        print_error "Neither curl nor wget is installed"
+        print_info "Please install curl or wget first"
         exit 1
     fi
-
-    print_success "Git is installed"
 }
 
 # Check pip
@@ -97,37 +103,72 @@ check_pip() {
     print_success "pip is available"
 }
 
+# Download file
+download_file() {
+    local url=$1
+    local output=$2
+
+    if [ "$DOWNLOADER" = "curl" ]; then
+        curl -fsSL "$url" -o "$output"
+    else
+        wget -q "$url" -O "$output"
+    fi
+}
+
 # Install Weave
 install_weave() {
     print_info "Installing Weave CLI..."
 
-    # Create installation directory
-    if [ -d "$INSTALL_DIR" ]; then
-        print_warning "Installation directory exists: $INSTALL_DIR"
-        read -p "Remove and reinstall? (y/N): " -n 1 -r
+    # Check if already installed
+    if command_exists weave; then
+        print_warning "Weave CLI is already installed"
+        read -p "Reinstall? (y/N): " -n 1 -r
         echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            rm -rf "$INSTALL_DIR"
-        else
-            print_info "Updating existing installation..."
-            cd "$INSTALL_DIR"
-            git pull
-            pip3 install -e . --quiet
-            print_success "Updated Weave CLI"
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_info "Keeping existing installation"
             return
         fi
+        pip3 uninstall -y weave-cli 2>/dev/null || true
     fi
 
-    # Clone repository
-    print_info "Cloning repository..."
-    git clone --quiet "$REPO_URL" "$INSTALL_DIR"
-    print_success "Repository cloned"
+    # Create temporary directory
+    TEMP_DIR=$(mktemp -d)
+    cd "$TEMP_DIR"
+
+    # Download source code archive
+    print_info "Downloading from GitHub..."
+    download_file "$DOWNLOAD_URL" "weave.zip"
+    print_success "Downloaded source code"
+
+    # Extract archive
+    print_info "Extracting files..."
+    if command_exists unzip; then
+        unzip -q weave.zip
+    else
+        print_error "unzip is not installed"
+        print_info "Please install unzip: sudo apt install unzip"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+
+    # Find extracted directory
+    EXTRACT_DIR=$(find . -maxdepth 1 -type d -name "weave-cli-*" | head -1)
+
+    if [ -z "$EXTRACT_DIR" ]; then
+        print_error "Failed to extract source code"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
 
     # Install package
     print_info "Installing package..."
-    cd "$INSTALL_DIR"
-    pip3 install -e . --quiet
+    cd "$EXTRACT_DIR"
+    pip3 install --quiet .
     print_success "Weave CLI installed"
+
+    # Cleanup
+    cd /
+    rm -rf "$TEMP_DIR"
 }
 
 # Install optional features
@@ -140,7 +181,7 @@ install_optional() {
     echo
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
         print_info "Installing LLM support..."
-        pip3 install -e ".[llm]" --quiet
+        pip3 install --quiet openai anthropic
         print_success "LLM support installed"
     fi
 
@@ -148,7 +189,7 @@ install_optional() {
     echo
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
         print_info "Installing deployment support..."
-        pip3 install -e ".[deploy]" --quiet
+        pip3 install --quiet boto3 docker
         print_success "Deployment support installed"
     fi
 
@@ -156,7 +197,7 @@ install_optional() {
     echo
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
         print_info "Installing development tools..."
-        pip3 install -e ".[watch]" --quiet
+        pip3 install --quiet watchdog
         print_success "Development tools installed"
     fi
 }
@@ -209,7 +250,7 @@ main() {
 
     # Pre-flight checks
     check_python
-    check_git
+    check_downloader
     check_pip
 
     echo ""
