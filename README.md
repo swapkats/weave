@@ -33,22 +33,9 @@ Weave is a framework for building and composing AI agents. Define multi-agent wo
 ### From Source
 
 ```bash
-git clone https://github.com/weave/weave-cli.git
-cd weave-cli
+git clone https://github.com/swapkats/weave.git
+cd weave
 pip install -e .
-```
-
-### With Optional Features
-
-```bash
-# Install with LLM support
-pip install -e ".[llm]"
-
-# Install with web search
-pip install -e ".[web]"
-
-# Install everything
-pip install -e ".[all]"
 ```
 
 ### Setup API Keys
