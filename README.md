@@ -82,11 +82,14 @@ weaves:
     description: "Research and write content"
     agents: [researcher, writer]
 ```
-
-### 2. Run Your Workflow
+### 2. Run Interactive Chat
 
 ```bash
-weave apply
+# Chat with default model
+weave run
+
+# Chat with specific agent from config
+weave run --agent researcher
 ```
 
 ### 3. Review Execution Plan
@@ -106,17 +109,13 @@ Order  Agent       Model         Inputs
 Execution graph:
   researcher → writer
 
-2 agents will be executed.
+2 agents will be created
 ```
 
-### 4. Run Interactive Chat
+### 4. Apply Your Workflow
 
 ```bash
-# Chat with default model
-weave run
-
-# Chat with specific agent from config
-weave run --agent researcher
+weave apply
 ```
 
 ## 🛠️ Built-in Tools
