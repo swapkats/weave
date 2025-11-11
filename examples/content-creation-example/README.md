@@ -29,7 +29,7 @@ weave apply --input "AI agents in healthcare"
 
 ## Customize
 
-Edit `.weave.yaml` to change:
+Edit `.agent.yaml` to change:
 - Content type (blog-post, article, social-media)
 - Word count target
 - Tone and style
@@ -37,7 +37,7 @@ Edit `.weave.yaml` to change:
 
 ## Output
 
-Content is saved to `.weave/storage/` with:
+Content is saved to `.agent/storage/` with:
 - Research findings
 - Draft content
 - Final edited version with SEO metadata

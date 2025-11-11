@@ -17,7 +17,7 @@ This example shows how to:
 agent-creator-mcp-example/
 ├── README.md                  # This file
 ├── agent_creator_server.py    # MCP server implementation
-├── .weave.yaml               # Weave configuration using the MCP server
+├── .agent.yaml               # Weave configuration using the MCP server
 ├── mcp_config.json           # MCP server configuration
 ├── example_interaction.md     # Sample interaction walkthrough
 └── example_output.yaml       # Example generated configuration
@@ -42,10 +42,10 @@ Copy the MCP configuration to your Weave config directory:
 mkdir -p ~/.weave
 
 # Copy the MCP configuration
-cp mcp_config.json ~/.weave/mcp_config.json
+cp mcp_config.json ~/.agent/mcp_config.json
 ```
 
-Or manually add to `~/.weave/mcp_config.json`:
+Or manually add to `~/.agent/mcp_config.json`:
 
 ```json
 {
@@ -184,7 +184,7 @@ The MCP server asks 8 questions to build a complete agent configuration:
 
 ### The Weave Configuration
 
-The `.weave.yaml` defines two agents:
+The `.agent.yaml` defines two agents:
 
 1. **agent_designer** - Uses the MCP server tools to interactively create agent configs
 2. **configuration_validator** - Validates the generated configuration

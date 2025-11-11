@@ -37,15 +37,15 @@ Enable persistence to save important information across sessions:
 memory:
   type: "buffer"
   max_messages: 50
-  persist: true  # Saves to .weave/memory/agent_name_memory.md
+  persist: true  # Saves to .agent/memory/agent_name_memory.md
 ```
 
 ## Memory as a Resource
 
-Long-term memories are stored in `.weave/memory/` as markdown files:
+Long-term memories are stored in `.agent/memory/` as markdown files:
 
 ```
-.weave/
+.agent/
   memory/
     agent1_memory.md
     agent2_memory.md
@@ -86,13 +86,13 @@ Another memory entry.
 
 1. Run the workflow:
    ```bash
-   weave run memory_example.weave.yaml
+   weave run memory_example.agent.yaml
    ```
 
 2. Check the memory files:
    ```bash
-   ls -la .weave/memory/
-   cat .weave/memory/knowledge_keeper_memory.md
+   ls -la .agent/memory/
+   cat .agent/memory/knowledge_keeper_memory.md
    ```
 
 3. Long-term memory is automatically injected into agent prompts
@@ -164,6 +164,6 @@ memory:
    - Memory files are available as resources
 
 3. **Next Session**:
-   - Long-term memory is loaded from `.weave/memory/`
+   - Long-term memory is loaded from `.agent/memory/`
    - Agent can access past important information
    - New memories are appended to existing ones

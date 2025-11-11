@@ -10,7 +10,7 @@ env:
 
 storage:
   type: "local"
-  path: ".weave/storage"
+  path: ".agent/storage"
   artifacts:
     - code_outputs
     - test_results
@@ -20,7 +20,7 @@ observability:
   logging:
     level: "INFO"
     format: "json"
-    file: ".weave/logs/coding-workflow.log"
+    file: ".agent/logs/coding-workflow.log"
 
 # Custom tools for coding tasks
 tools:
@@ -80,7 +80,7 @@ agents:
     config:
       temperature: 0.7
       max_tokens: 2000
-    # System prompt loaded from: .weave/prompts/requirements_analyzer.md
+    # System prompt loaded from: .agent/prompts/requirements_analyzer.md
     system_prompt: |
       You are a senior software architect analyzing requirements.
 
@@ -110,8 +110,8 @@ agents:
     config:
       temperature: 0.3  # Lower for deterministic code
       max_tokens: 4000
-    # Reference: .weave/prompts/code_generator.md
-    # Skills: .weave/skills/clean_code.yaml
+    # Reference: .agent/prompts/code_generator.md
+    # Skills: .agent/skills/clean_code.yaml
     system_prompt: |
       You are an expert software engineer writing ${CODE_LANGUAGE} code.
 
@@ -144,7 +144,7 @@ agents:
     config:
       temperature: 0.4
       max_tokens: 3000
-    # Skills: .weave/skills/test_automation.yaml
+    # Skills: .agent/skills/test_automation.yaml
     system_prompt: |
       You are a test automation specialist creating thorough test suites.
 
@@ -179,7 +179,7 @@ agents:
     config:
       temperature: 0.5
       max_tokens: 2000
-    # Knowledge: .weave/knowledge/code_review_checklist.md
+    # Knowledge: .agent/knowledge/code_review_checklist.md
     system_prompt: |
       You are a senior code reviewer focused on quality and security.
 
@@ -211,7 +211,7 @@ agents:
     config:
       temperature: 0.6
       max_tokens: 2500
-    # Knowledge: .weave/knowledge/documentation_guide.md
+    # Knowledge: .agent/knowledge/documentation_guide.md
     system_prompt: |
       You are a technical writer creating clear documentation.
 
@@ -242,7 +242,7 @@ agents:
     config:
       temperature: 0.3
       max_tokens: 3000
-    # Skills: .weave/skills/refactoring.yaml
+    # Skills: .agent/skills/refactoring.yaml
     system_prompt: |
       You are a refactoring specialist improving code quality.
 
