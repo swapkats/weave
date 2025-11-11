@@ -181,16 +181,8 @@ class LLMExecutor:
         # Determine provider from model name
         model = agent.model.lower()
 
-        if "gpt" in model or "openai" in model:
-            response = await self._call_openai(
-                model=agent.model,
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                tools=tools,
-            )
-        elif "claude" in model or "anthropic" in model:
+        # Check if using Claude/Anthropic
+        if "claude" in model or "anthropic" in model:
             response = await self._call_anthropic(
                 model=agent.model,
                 system_prompt=system_prompt,
@@ -199,8 +191,32 @@ class LLMExecutor:
                 max_tokens=max_tokens,
                 tools=tools,
             )
+        # Check if using custom OpenAI-compatible endpoint (e.g., Gemini, LocalAI, LM Studio)
+        elif os.getenv("OPENAI_BASE_URL"):
+            response = await self._call_openai(
+                model=agent.model,
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                tools=tools,
+            )
+        # Default OpenAI (GPT models)
+        elif "gpt" in model or "openai" in model:
+            response = await self._call_openai(
+                model=agent.model,
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                tools=tools,
+            )
         else:
-            raise ValueError(f"Unsupported model: {agent.model}")
+            raise ValueError(
+                f"Unsupported model: {agent.model}. "
+                f"Supported: OpenAI (gpt-*), Anthropic (claude-*), "
+                f"or set OPENAI_BASE_URL for OpenAI-compatible APIs (Gemini, LocalAI, etc.)"
+            )
 
         # Save assistant response to session
         if self.session and response.content:
