@@ -34,7 +34,7 @@ weaves:
     agents: [agent_designer, configuration_validator]
 
 # MCP Configuration
-# Add this to your ~/.weave/mcp_config.json:
+# Add this to your ~/.agent/mcp_config.json:
 #
 # {
 #   "mcpServers": {

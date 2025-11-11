@@ -333,7 +333,7 @@ agents:
       max_tokens: 1500
 ```
 
-> You can save this to a `.weave.yaml` file and run it with:
+> You can save this to a `.agent.yaml` file and run it with:
 > ```bash
 > weave apply --real
 > ```
@@ -360,7 +360,7 @@ In this interaction, the Agent Creator:
 ## Next Steps
 
 The user can now:
-- Save the configuration to `.weave.yaml`
+- Save the configuration to `.agent.yaml`
 - Test with `weave plan`
 - Execute with `weave apply --real`
 - Add this agent to a larger workflow

@@ -5,7 +5,7 @@ This example demonstrates how to use the Weave resources system to organize and 
 ## Directory Structure
 
 ```
-.weave/
+.agent/
 ├── prompts/          # System prompts for agents
 │   └── content_writer.md
 ├── skills/           # Reusable skills

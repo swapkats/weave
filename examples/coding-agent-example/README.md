@@ -91,22 +91,22 @@ weave apply tdd_workflow
 
 ## Resource Files
 
-### Prompts (`.weave/prompts/`)
+### Prompts (`.agent/prompts/`)
 - `requirements_analyzer.md` - Requirements analysis system prompt
 - `code_generator.md` - Code generation guidelines
 
-### Skills (`.weave/skills/`)
+### Skills (`.agent/skills/`)
 - `clean_code.yaml` - Clean code principles
 - `test_automation.yaml` - Test automation best practices
 - `refactoring.yaml` - Refactoring techniques
 
-### Knowledge (`.weave/knowledge/`)
+### Knowledge (`.agent/knowledge/`)
 - `code_review_checklist.md` - Comprehensive review checklist
 - `documentation_guide.md` - Documentation standards
 
 ## Configuration
 
-The `.weave.yaml` file defines:
+The `.agent.yaml` file defines:
 - **Environment variables**: Default model, language, test framework
 - **Custom tools**: file_writer, test_runner, code_analyzer
 - **Agent definitions**: Models, prompts, tools, dependencies
@@ -142,7 +142,7 @@ weave apply test_focused
 
 ### Change Programming Language
 
-Edit `.weave.yaml`:
+Edit `.agent.yaml`:
 ```yaml
 env:
   CODE_LANGUAGE: "javascript"  # or "java", "go", etc.
@@ -151,17 +151,17 @@ env:
 
 ### Adjust Agent Behavior
 
-Modify system prompts in `.weave/prompts/` to change agent behavior.
+Modify system prompts in `.agent/prompts/` to change agent behavior.
 
 ### Add Custom Tools
 
-Define new tools in the `tools:` section of `.weave.yaml`.
+Define new tools in the `tools:` section of `.agent.yaml`.
 
 ## Storage
 
 Generated artifacts are stored in:
 ```
-.weave/storage/
+.agent/storage/
 ├── code_outputs/     # Generated code files
 ├── test_results/     # Test execution results
 └── review_reports/   # Code review reports
@@ -173,7 +173,7 @@ Retention: 30 days (configurable in storage.retention)
 
 Logs are written to:
 ```
-.weave/logs/coding-workflow.log
+.agent/logs/coding-workflow.log
 ```
 
 Enable metrics and tracing in the `observability:` section.
