@@ -16,14 +16,11 @@ Weave is a framework for building and composing interopable AI agents. Define wh
 
 - **Declarative YAML** - Define agents and workflows in configuration
 - **Automatic Orchestration** - Smart dependency resolution and execution ordering
-- **Real LLM Integration** - OpenAI and Anthropic API support
-- **Secure API Key Management** - Encrypted storage with automatic fallback to environment variables
-- **Conversation Sessions** - Save and resume agent conversations with full history
+- **OpenAI Support** - Supports OpenAI natively
 - **Tool Calling** - 9 built-in tools + custom tool support
 - **Plugin System** - Built-in plugins for web search, data processing, formatting
 - **MCP Integration** - Connect to Model Context Protocol servers
-- **Development Mode** - Interactive workflow development with auto-reload
-- **Resource Management** - Organize prompts, skills, and knowledge bases
+- **Prompt Engineering** - Organize prompts, skills, and knowledge bases
 
 ## 📦 Installation
 
