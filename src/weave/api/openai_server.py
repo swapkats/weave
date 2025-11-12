@@ -127,10 +127,20 @@ class OpenAIServer:
                     )
                 self.agent_obj = self.weave_config.agents[self.agent_name]
 
-                # Initialize tool executor if agent has tools
+                # Initialize tool executor (always available)
+                self.tool_executor = ToolExecutor()
+
+                # Log available tools if agent uses them
                 if self.agent_obj.tools:
-                    self.tool_executor = ToolExecutor()
-                    self._log(f"✓ Loaded {len(self.agent_obj.tools)} tools: {', '.join(self.agent_obj.tools)}")
+                    available_tools = []
+                    for tool_name in self.agent_obj.tools:
+                        tool = self.tool_executor.get_tool(tool_name)
+                        if tool:
+                            available_tools.append(tool_name)
+                    if available_tools:
+                        self._log(f"✓ Loaded {len(available_tools)} tools: {', '.join(available_tools)}")
+                    else:
+                        self._log(f"⚠ No matching tools found for: {', '.join(self.agent_obj.tools)}")
 
                 self._log(f"✓ Loaded agent: {self.agent_name}")
                 self._log(f"✓ Model: {self.agent_obj.model}")
@@ -383,22 +393,33 @@ class OpenAIServer:
 
             self._log(f"  [{i}] {tool_name}({args_preview})")
 
-    async def _prepare_tools(self, tool_names: List[str]) -> List[Dict[str, Any]]:
+    async def _prepare_tools(self, tool_names: List[str]) -> Optional[List[Dict[str, Any]]]:
         """Prepare tool definitions for LLM."""
+        if not self.tool_executor:
+            return None
+
         tools = []
 
         for tool_name in tool_names:
             tool = self.tool_executor.get_tool(tool_name)
             if tool:
-                tools.append(tool.definition.to_json_schema())
+                # Convert to JSON schema format
+                schema = tool.definition.to_json_schema()
+                tools.append(schema)
+            else:
+                self._log(f"⚠ Tool not found: {tool_name}", error=False)
 
         return tools if tools else None
 
     async def _handle_tool_calls(
         self, agent, llm_response, context: Dict[str, Any], executor: LLMExecutor, session_id: str
     ):
-        """Handle tool calls from LLM response."""
+        """Handle tool calls from LLM response using unified ToolExecutor."""
         import json
+
+        if not self.tool_executor:
+            self._log("  ✗ Tool executor not available", error=True)
+            return llm_response
 
         # Execute each tool call
         tool_results = []
@@ -416,16 +437,18 @@ class OpenAIServer:
 
             self._log(f"  → Executing: {tool_name}")
 
-            # Execute tool
+            # Execute tool using unified executor
             try:
-                tool = self.tool_executor.get_tool(tool_name)
-                if tool and tool.handler:
-                    # Call the tool handler
-                    if asyncio.iscoroutinefunction(tool.handler):
-                        result = await tool.handler(**tool_args)
-                    else:
-                        result = tool.handler(**tool_args)
+                result = await self.tool_executor.execute_async(tool_name, tool_args)
 
+                if "error" in result:
+                    self._log(f"  ✗ Error: {result['error']}", error=True)
+                    tool_results.append({
+                        "tool": tool_name,
+                        "error": result["error"],
+                        "success": False
+                    })
+                else:
                     tool_results.append({
                         "tool": tool_name,
                         "result": result,
@@ -437,13 +460,7 @@ class OpenAIServer:
                     if len(str(result)) > 100:
                         result_preview += "..."
                     self._log(f"  ✓ Result: {result_preview}")
-                else:
-                    self._log(f"  ✗ Tool not found: {tool_name}", error=True)
-                    tool_results.append({
-                        "tool": tool_name,
-                        "error": f"Tool not found: {tool_name}",
-                        "success": False
-                    })
+
             except Exception as e:
                 self._log(f"  ✗ Error: {e}", error=True)
                 tool_results.append({
