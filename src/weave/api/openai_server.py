@@ -394,7 +394,7 @@ class OpenAIServer:
             self._log(f"  [{i}] {tool_name}({args_preview})")
 
     async def _prepare_tools(self, tool_names: List[str]) -> Optional[List[Dict[str, Any]]]:
-        """Prepare tool definitions for LLM."""
+        """Prepare tool definitions for LLM (OpenAI format)."""
         if not self.tool_executor:
             return None
 
@@ -403,8 +403,8 @@ class OpenAIServer:
         for tool_name in tool_names:
             tool = self.tool_executor.get_tool(tool_name)
             if tool:
-                # Convert to JSON schema format
-                schema = tool.definition.to_json_schema()
+                # Convert to OpenAI JSON schema format
+                schema = tool.definition.to_json_schema("openai")
                 tools.append(schema)
             else:
                 self._log(f"⚠ Tool not found: {tool_name}", error=False)

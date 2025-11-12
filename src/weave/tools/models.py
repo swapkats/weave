@@ -40,8 +40,15 @@ class ToolDefinition(BaseModel):
     tags: List[str] = Field(default_factory=list)
     mcp_server: Optional[str] = None  # If tool comes from MCP server
 
-    def to_json_schema(self) -> Dict[str, Any]:
-        """Convert tool definition to JSON Schema format."""
+    def to_json_schema(self, format: str = "openai") -> Dict[str, Any]:
+        """Convert tool definition to LLM provider format.
+
+        Args:
+            format: "openai" for OpenAI/Gemini format, "anthropic" for Anthropic format
+
+        Returns:
+            Tool schema in the requested format
+        """
         properties = {}
         required = []
 
@@ -65,15 +72,29 @@ class ToolDefinition(BaseModel):
             if param.required:
                 required.append(param.name)
 
-        return {
-            "name": self.name,
-            "description": self.description,
-            "parameters": {
-                "type": "object",
-                "properties": properties,
-                "required": required,
-            },
+        parameters_schema = {
+            "type": "object",
+            "properties": properties,
+            "required": required,
         }
+
+        if format == "anthropic":
+            # Anthropic format
+            return {
+                "name": self.name,
+                "description": self.description,
+                "input_schema": parameters_schema,
+            }
+        else:
+            # OpenAI/Gemini format (default)
+            return {
+                "type": "function",
+                "function": {
+                    "name": self.name,
+                    "description": self.description,
+                    "parameters": parameters_schema,
+                },
+            }
 
 
 class ToolCall(BaseModel):
