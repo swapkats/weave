@@ -499,13 +499,18 @@ class Executor:
             raise
 
     async def _prepare_tools(self, tool_names: List[str]) -> List[Dict[str, Any]]:
-        """Prepare tool definitions for LLM."""
+        """Prepare tool definitions for LLM in OpenAI format."""
         tools = []
 
         for tool_name in tool_names:
             tool_def = self.tool_executor.get_tool(tool_name)
             if tool_def:
-                tools.append(tool_def.to_json_schema())
+                # Convert to OpenAI tool format
+                tool_schema = tool_def.definition.to_json_schema()
+                tools.append({
+                    "type": "function",
+                    "function": tool_schema
+                })
 
         return tools if tools else None
 
