@@ -94,7 +94,7 @@ class OpenAIServer:
         agent_name: str,
         config_path: Path,
         host: str = "0.0.0.0",
-        port: int = 8000,
+        port: int = 8765,
         verbose: bool = True
     ):
         self.agent_name = agent_name
@@ -347,7 +347,7 @@ def start_openai_server(
     agent_name: str,
     config_path: Path,
     host: str = "0.0.0.0",
-    port: int = 8000,
+    port: int = 8765,
     verbose: bool = True
 ):
     """
@@ -357,7 +357,7 @@ def start_openai_server(
         agent_name: Name of the agent from config
         config_path: Path to the config file
         host: Host to bind to (default: 0.0.0.0)
-        port: Port to bind to (default: 8000)
+        port: Port to bind to (default: 8765)
         verbose: Enable verbose logging (default: True)
     """
     server = OpenAIServer(

@@ -953,7 +953,7 @@ def run(
         "0.0.0.0", "--host", help="Host to bind to (OpenAI mode only)"
     ),
     port: int = typer.Option(
-        8000, "--port", help="Port to bind to (OpenAI mode only)"
+        8765, "--port", help="Port to bind to (OpenAI mode only)"
     ),
 ) -> None:
     """

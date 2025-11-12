@@ -26,7 +26,7 @@ Start a Weave agent as an OpenAI-compatible API server:
 weave run agent researcher --openai-mode
 ```
 
-This will start a server on `http://0.0.0.0:8000` by default.
+This will start a server on `http://0.0.0.0:8765` by default.
 
 ### Custom Host and Port
 
@@ -46,8 +46,8 @@ When running in OpenAI mode, you'll see simple feedback output:
 [2025-11-12 10:30:45] [INFO] Config: .agent.yaml
 [2025-11-12 10:30:45] [INFO] ✓ Loaded agent: researcher
 [2025-11-12 10:30:45] [INFO] ✓ Model: gemini-2.5-flash
-[2025-11-12 10:30:45] [INFO] ✓ Server started on http://0.0.0.0:8000
-[2025-11-12 10:30:45] [INFO] ✓ Endpoint: http://0.0.0.0:8000/v1/chat/completions
+[2025-11-12 10:30:45] [INFO] ✓ Server started on http://0.0.0.0:8765
+[2025-11-12 10:30:45] [INFO] ✓ Endpoint: http://0.0.0.0:8765/v1/chat/completions
 ```
 
 Request/response logs:
@@ -147,7 +147,7 @@ from openai import OpenAI
 
 # Point to your Weave server
 client = OpenAI(
-    base_url="http://localhost:8000/v1",
+    base_url="http://localhost:8765/v1",
     api_key="dummy"  # Not used, but required by the SDK
 )
 
@@ -167,7 +167,7 @@ print(response.choices[0].message.content)
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-  baseURL: 'http://localhost:8000/v1',
+  baseURL: 'http://localhost:8765/v1',
   apiKey: 'dummy'  // Not used, but required by the SDK
 });
 
@@ -184,7 +184,7 @@ console.log(response.choices[0].message.content);
 ### cURL
 
 ```bash
-curl http://localhost:8000/v1/chat/completions \
+curl http://localhost:8765/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "researcher",
@@ -201,7 +201,7 @@ Enable streaming responses by setting `stream: true`:
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="http://localhost:8000/v1",
+    base_url="http://localhost:8765/v1",
     api_key="dummy"
 )
 
@@ -265,7 +265,7 @@ agents:
 ### Running with Multiple Workers
 
 ```bash
-uvicorn weave.api.openai_server:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn weave.api.openai_server:app --host 0.0.0.0 --port 8765 --workers 4
 ```
 
 ### Behind a Reverse Proxy
@@ -274,7 +274,7 @@ Configure nginx or similar to handle TLS and authentication:
 
 ```nginx
 location /v1/ {
-    proxy_pass http://localhost:8000/v1/;
+    proxy_pass http://localhost:8765/v1/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
 }
@@ -295,7 +295,7 @@ pip install 'weave-cli[api]'
 Change the port:
 
 ```bash
-weave run agent researcher --openai-mode --port 8001
+weave run agent researcher --openai-mode --port 8766
 ```
 
 ### Agent Not Found
