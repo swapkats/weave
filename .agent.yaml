@@ -11,9 +11,19 @@ agents:
   researcher:
     model: "gemini-2.5-flash"
     tools:
-      - http_request
-      - file_read
-      - json_validator
+      - FindFiles
+      - GoogleSearch
+      - ReadFile
+      - ReadFolder
+      - ReadManyFiles
+      - Save Memory
+      - SearchText
+      - Shell
+      - TodoPause
+      - TodoRead
+      - TodoWrite
+      - WebFetch
+      - WriteFile
     config:
       temperature: 0.7
       max_tokens: 1000
