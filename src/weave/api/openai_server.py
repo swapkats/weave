@@ -127,10 +127,20 @@ class OpenAIServer:
                     )
                 self.agent_obj = self.weave_config.agents[self.agent_name]
 
-                # Initialize tool executor if agent has tools
+                # Initialize tool executor (always available)
+                self.tool_executor = ToolExecutor()
+
+                # Log available tools if agent uses them
                 if self.agent_obj.tools:
-                    self.tool_executor = ToolExecutor()
-                    self._log(f"✓ Loaded {len(self.agent_obj.tools)} tools: {', '.join(self.agent_obj.tools)}")
+                    available_tools = []
+                    for tool_name in self.agent_obj.tools:
+                        tool = self.tool_executor.get_tool(tool_name)
+                        if tool:
+                            available_tools.append(tool_name)
+                    if available_tools:
+                        self._log(f"✓ Loaded {len(available_tools)} tools: {', '.join(available_tools)}")
+                    else:
+                        self._log(f"⚠ No matching tools found for: {', '.join(self.agent_obj.tools)}")
 
                 self._log(f"✓ Loaded agent: {self.agent_name}")
                 self._log(f"✓ Model: {self.agent_obj.model}")
@@ -405,6 +415,10 @@ class OpenAIServer:
         """Handle tool calls from LLM response and get final answer."""
         import json
 
+        if not self.tool_executor:
+            self._log("  ✗ Tool executor not available", error=True)
+            return llm_response
+
         # Execute each tool call
         tool_messages = []
 
@@ -422,15 +436,9 @@ class OpenAIServer:
 
             self._log(f"  → Executing: {tool_name}")
 
-            # Execute tool
+            # Execute tool using unified executor
             try:
-                tool = self.tool_executor.get_tool(tool_name)
-                if tool and tool.handler:
-                    # Call the tool handler
-                    if asyncio.iscoroutinefunction(tool.handler):
-                        result = await tool.handler(**tool_args)
-                    else:
-                        result = tool.handler(**tool_args)
+                result = await self.tool_executor.execute_async(tool_name, tool_args)
 
                     # Log tool result
                     result_preview = str(result)[:100]

@@ -517,22 +517,71 @@ class Executor:
     async def _handle_tool_calls(
         self, agent: Agent, llm_response, context: Dict[str, Any]
     ) -> Any:
-        """Handle tool calls from LLM response."""
+        """Handle tool calls from LLM response using unified ToolExecutor."""
+        import json
+
+        if not self.tool_executor:
+            if self.verbose:
+                self.console.print("[yellow]Tool executor not available[/yellow]")
+            return llm_response
+
         # Execute each tool call
         tool_results = []
 
         for tool_call in llm_response.tool_calls:
+            tool_name = tool_call.get("name")
+            tool_args = tool_call.get("arguments", {})
+
+            # Parse arguments if string
+            if isinstance(tool_args, str):
+                try:
+                    tool_args = json.loads(tool_args)
+                except:
+                    pass
+
             if self.verbose:
                 self.console.print(
-                    f"[dim]  → Calling tool: {tool_call['name']}[/dim]"
+                    f"[dim]  → Calling tool: {tool_name}[/dim]"
                 )
 
-            # Execute tool
-            result = await self.tool_executor.execute_async(
-                tool_call["name"], tool_call.get("arguments", {})
-            )
+            # Execute tool using unified executor
+            try:
+                result = await self.tool_executor.execute_async(tool_name, tool_args)
 
-            tool_results.append(result)
+                if "error" in result:
+                    if self.verbose:
+                        self.console.print(
+                            f"[yellow]  ✗ Tool error: {result['error']}[/yellow]"
+                        )
+                    tool_results.append({
+                        "tool": tool_name,
+                        "error": result["error"],
+                        "success": False
+                    })
+                else:
+                    if self.verbose:
+                        result_preview = str(result)[:80]
+                        if len(str(result)) > 80:
+                            result_preview += "..."
+                        self.console.print(
+                            f"[dim]  ✓ Result: {result_preview}[/dim]"
+                        )
+                    tool_results.append({
+                        "tool": tool_name,
+                        "result": result,
+                        "success": True
+                    })
+
+            except Exception as e:
+                if self.verbose:
+                    self.console.print(
+                        f"[red]  ✗ Tool exception: {e}[/red]"
+                    )
+                tool_results.append({
+                    "tool": tool_name,
+                    "error": str(e),
+                    "success": False
+                })
 
         # For now, just return the LLM response
         # In a full implementation, we'd send tool results back to LLM

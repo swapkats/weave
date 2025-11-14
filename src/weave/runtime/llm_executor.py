@@ -470,9 +470,23 @@ class LLMExecutor:
                 "max_tokens": max_tokens,
             }
 
-        # Add tools if provided (Anthropic format)
+        # Add tools if provided (convert to Anthropic format)
         if tools:
-            kwargs["tools"] = tools
+            anthropic_tools = []
+            for tool in tools:
+                # Convert from OpenAI format to Anthropic format
+                if "function" in tool:
+                    # Already in OpenAI format, convert to Anthropic
+                    func = tool["function"]
+                    anthropic_tools.append({
+                        "name": func["name"],
+                        "description": func["description"],
+                        "input_schema": func["parameters"],
+                    })
+                else:
+                    # Assume already in Anthropic format
+                    anthropic_tools.append(tool)
+            kwargs["tools"] = anthropic_tools
 
         if self.verbose:
             self.console.print(f"[dim]Calling Anthropic {model}...[/dim]")

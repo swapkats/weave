@@ -28,9 +28,17 @@ class ToolExecutor:
     def _load_builtin_tools(self) -> None:
         """Load built-in tools."""
         from weave.tools.builtin import get_builtin_tools
+        from weave.tools.comprehensive import get_comprehensive_tools
 
-        for tool in get_builtin_tools():
+        # Load comprehensive tools (priority set)
+        for tool in get_comprehensive_tools():
             self.register_tool(tool)
+
+        # Load additional builtin tools
+        for tool in get_builtin_tools():
+            # Only add if not already registered (comprehensive tools take precedence)
+            if tool.definition.name not in self.tools:
+                self.register_tool(tool)
 
     def _load_mcp_tools(self) -> None:
         """Load tools from configured MCP servers."""
@@ -146,6 +154,32 @@ class ToolExecutor:
             result = await self.execute_tool(tool_call)
             results.append(result)
         return results
+
+    async def execute_async(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a tool by name with arguments (async interface).
+
+        Args:
+            tool_name: Name of the tool to execute
+            arguments: Tool arguments
+
+        Returns:
+            Tool execution result
+        """
+        tool = self.get_tool(tool_name)
+
+        if not tool:
+            return {
+                "error": f"Unknown tool: {tool_name}",
+                "tool_name": tool_name
+            }
+
+        # Execute tool
+        result = await tool.execute(arguments)
+
+        if result.success:
+            return result.result
+        else:
+            return {"error": result.error, "tool_name": tool_name}
 
     def get_tool_schemas(self, tool_names: List[str]) -> List[Dict[str, Any]]:
         """Get JSON schemas for tools.
