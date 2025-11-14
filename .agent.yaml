@@ -5,11 +5,11 @@ version: "1.0"
 
 # Optional: define environment variables
 env:
-  DEFAULT_MODEL: "gemini-2.5-flash"
+  DEFAULT_MODEL: "gemini-2.5-pro"
 
 agents:
-  researcher:
-    model: "gemini-2.5-flash"
+  robin:
+    model: "gemini-2.5-pro"
     tools:
       - FindFiles
       - GoogleSearch
@@ -34,7 +34,7 @@ agents:
     tools:
       - text_length
       - string_formatter
-    inputs: "researcher"  # Takes input from researcher
+    inputs: "robin"  # Takes input from researcher
     config:
       temperature: 0.9
       max_tokens: 2000
@@ -54,6 +54,6 @@ weaves:
   content_pipeline:
     description: "Research, write, and edit content"
     agents:
-      - researcher
+      - robin
       - writer
       - editor
